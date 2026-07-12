@@ -24,6 +24,19 @@ struct MatchConfig: Equatable, Codable {
     var targetGames: Int
     /// 首个发球方。
     var firstServer: Side
+    /// 双方队名（用于界面显示与「拿下这一局/该谁发球」等事件播报；报分本身只报数字）。
+    var nameMe: String
+    var nameOpp: String
+
+    init(targetGames: Int, firstServer: Side, nameMe: String = "我方", nameOpp: String = "对方") {
+        self.targetGames = targetGames
+        self.firstServer = firstServer
+        self.nameMe = nameMe
+        self.nameOpp = nameOpp
+    }
+
+    /// 取某一方的队名。
+    func name(for side: Side) -> String { side == .me ? nameMe : nameOpp }
 
     static let `default` = MatchConfig(targetGames: 4, firstServer: .me)
 }

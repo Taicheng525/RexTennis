@@ -181,7 +181,7 @@ final class ScoreEngineTests: XCTestCase {
         XCTAssertTrue(g3.contains(.changeEnds))
     }
 
-    // MARK: - 播报语序（发球方在前）
+    // MARK: - 播报（只报数字，发球方在前，专业读法）
 
     func testAnnouncementServerFirst_zh() {
         let builder = AnnouncementBuilder()
@@ -190,12 +190,33 @@ final class ScoreEngineTests: XCTestCase {
 
         s.server = .me
         XCTAssertEqual(builder.utterance(for: [.point], state: s, language: .chinese),
-                       "我方40，对方30")
+                       "四十比三十")
 
-        // 发球方在前：此时发球方是对方（只有 30），我方 40
+        // 发球方在前：此时发球方是对方（只有 30 分）
         s.server = .opponent
         XCTAssertEqual(builder.utterance(for: [.point], state: s, language: .chinese),
-                       "对方30，我方40")
+                       "三十比四十")
+    }
+
+    func testAnnouncementZeroReadsCorrectly() {
+        let builder = AnnouncementBuilder()
+        var s = makeState()
+        s.pointsMe = 0; s.pointsOpp = 2; s.server = .me
+
+        // 中文：0 读「零」
+        XCTAssertEqual(builder.utterance(for: [.point], state: s, language: .chinese),
+                       "零比三十")
+        // 英文：0 读 love
+        XCTAssertEqual(builder.utterance(for: [.point], state: s, language: .english),
+                       "love thirty")
+    }
+
+    func testAnnouncementAllWhenTied() {
+        let builder = AnnouncementBuilder()
+        var s = makeState()
+        s.pointsMe = 1; s.pointsOpp = 1; s.server = .me
+        XCTAssertEqual(builder.utterance(for: [.point], state: s, language: .chinese), "十五平")
+        XCTAssertEqual(builder.utterance(for: [.point], state: s, language: .english), "fifteen all")
     }
 
     func testAnnouncementDeuce_zh() {
@@ -203,7 +224,7 @@ final class ScoreEngineTests: XCTestCase {
         var s = makeState()
         s.pointsMe = 3; s.pointsOpp = 3
         XCTAssertEqual(builder.utterance(for: [.deuce], state: s, language: .chinese),
-                       "平分，金球点")
+                       "平分，金球")
     }
 
     func testAnnouncementPoint_en() {
@@ -211,7 +232,32 @@ final class ScoreEngineTests: XCTestCase {
         var s = makeState()
         s.pointsMe = 3; s.pointsOpp = 2; s.server = .me
         XCTAssertEqual(builder.utterance(for: [.point], state: s, language: .english),
-                       "You forty, Opponent thirty")
+                       "forty thirty")
+    }
+
+    func testAnnouncementTiebreakNumbers() {
+        let builder = AnnouncementBuilder()
+        var s = stateInTiebreak(target: 4)
+        s.tbMe = 0; s.tbOpp = 3; s.server = .me
+        // 中文抢七：0 读「零」
+        XCTAssertEqual(builder.utterance(for: [.tiebreakPoint], state: s, language: .chinese),
+                       "零比3")
+        // 英文抢七：0 读 zero（抢七惯例）
+        XCTAssertEqual(builder.utterance(for: [.tiebreakPoint], state: s, language: .english),
+                       "zero 3")
+    }
+
+    func testAnnouncementUsesTeamNames() {
+        let builder = AnnouncementBuilder()
+        var s = MatchState(config: MatchConfig(targetGames: 4, firstServer: .me,
+                                               nameMe: "暴龙队", nameOpp: "闪电队"))
+        s.gamesMe = 2; s.gamesOpp = 1
+        // 拿下一局：带队名
+        XCTAssertEqual(builder.utterance(for: [.gameWon(.me)], state: s, language: .chinese),
+                       "暴龙队拿下这一局，局分2比1")
+        // 换发球：带队名
+        XCTAssertEqual(builder.utterance(for: [.serveChange(.opponent)], state: s, language: .chinese),
+                       "该闪电队发球")
     }
 
     func testAnnouncementGameAndSet_zh() {

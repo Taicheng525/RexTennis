@@ -2,7 +2,11 @@ import Foundation
 
 /// 把计分事件 + 当前状态转成一句中/英文播报文案（纯逻辑，可单测）。
 ///
-/// 约定：报分时**发球方分数在前**（网球惯例）。
+/// 播报约定（专业裁判风格）：
+/// - **报分只报数字，不带队名**，且**发球方分数永远在前**。
+/// - 0 的读法：英文 love（抢七读 zero），中文 零。
+/// - 双方同分：中文「十五平」，英文 "fifteen all"。
+/// - 队名只出现在事件播报里：拿下一局 / 该谁发球 / 胜盘。
 struct AnnouncementBuilder {
 
     /// 生成一次得分后的完整播报文案。events 为空则返回空串。
@@ -22,87 +26,77 @@ struct AnnouncementBuilder {
         let zh = lang == .chinese
         switch event {
         case .point:
-            return scoreLinePlaying(s, lang)
+            return gameScoreCall(s, lang)
 
         case .deuce:
-            return zh ? "平分，金球点" : "Deuce, sudden death point"
+            return zh ? "平分，金球" : "Deuce, deciding point"
 
         case .gameWon(let side):
+            let name = s.config.name(for: side)
+            let wg = s.games(for: side)
+            let lg = s.games(for: side.other)
             if zh {
-                return "\(name(side, lang))拿下这一局，局分我方\(s.gamesMe)，对方\(s.gamesOpp)"
+                return "\(name)拿下这一局，局分\(wg)比\(lg)"
             } else {
-                return "Game, \(name(side, lang)). Games, you \(s.gamesMe), opponent \(s.gamesOpp)"
+                return "Game, \(name). Games \(wg) \(lg)"
             }
 
         case .tiebreakStarted:
             return zh ? "进入抢七" : "Tie-break"
 
         case .tiebreakPoint:
-            return scoreLineTiebreak(s, lang)
+            return tiebreakScoreCall(s, lang)
 
         case .changeEnds:
             return zh ? "换边" : "Change ends"
 
         case .serveChange(let side):
-            return zh ? "该\(name(side, lang))发球" : "\(name(side, lang)) to serve"
+            let name = s.config.name(for: side)
+            return zh ? "该\(name)发球" : "\(name) to serve"
 
         case .setWon(let side):
+            let name = s.config.name(for: side)
             let wg = s.games(for: side)
             let lg = s.games(for: side.other)
             if zh {
-                return "\(name(side, lang))以\(wg)比\(lg)拿下本盘，比赛结束"
+                return "\(name)以\(wg)比\(lg)拿下本盘，比赛结束"
             } else {
-                return "Game, set and match, \(name(side, lang)). \(wg) games to \(lg)"
+                return "Game, set and match, \(name). \(wg) games to \(lg)"
             }
         }
     }
 
-    // MARK: - 比分行（发球方在前）
+    // MARK: - 报分（发球方在前，只报数字）
 
-    private func scoreLinePlaying(_ s: MatchState, _ lang: AnnounceLanguage) -> String {
-        let server = s.server
-        let receiver = server.other
-        let sv = pointWord(s.gameScoreLabel(for: server), lang)
-        let rv = pointWord(s.gameScoreLabel(for: receiver), lang)
-        return scoreLine(server: server, sv: sv, receiver: receiver, rv: rv, lang: lang)
-    }
+    /// 常规局报分：0/15/30/40，中文数词、英文 love/fifteen/thirty/forty。
+    private func gameScoreCall(_ s: MatchState, _ lang: AnnounceLanguage) -> String {
+        let sv = min(s.server == .me ? s.pointsMe : s.pointsOpp, 3)
+        let rv = min(s.server == .me ? s.pointsOpp : s.pointsMe, 3)
 
-    private func scoreLineTiebreak(_ s: MatchState, _ lang: AnnounceLanguage) -> String {
-        let server = s.server
-        let receiver = server.other
-        let sv = String(s.tiebreakPoints(for: server))
-        let rv = String(s.tiebreakPoints(for: receiver))
-        return scoreLine(server: server, sv: sv, receiver: receiver, rv: rv, lang: lang)
-    }
-
-    private func scoreLine(server: Side, sv: String, receiver: Side, rv: String, lang: AnnounceLanguage) -> String {
         if lang == .chinese {
-            return "\(name(server, lang))\(sv)，\(name(receiver, lang))\(rv)"
+            let words = ["零", "十五", "三十", "四十"]
+            return sv == rv ? "\(words[sv])平" : "\(words[sv])比\(words[rv])"
         } else {
-            return "\(name(server, lang)) \(sv), \(name(receiver, lang)) \(rv)"
+            let words = ["love", "fifteen", "thirty", "forty"]
+            return sv == rv ? "\(words[sv]) all" : "\(words[sv]) \(words[rv])"
         }
     }
 
-    // MARK: - 词汇
+    /// 抢七报分：纯数字，发球方在前；0 中文读零、英文读 zero。
+    private func tiebreakScoreCall(_ s: MatchState, _ lang: AnnounceLanguage) -> String {
+        let sv = s.tiebreakPoints(for: s.server)
+        let rv = s.tiebreakPoints(for: s.server.other)
 
-    private func name(_ side: Side, _ lang: AnnounceLanguage) -> String {
-        switch (side, lang) {
-        case (.me, .chinese): return "我方"
-        case (.opponent, .chinese): return "对方"
-        case (.me, .english): return "You"
-        case (.opponent, .english): return "Opponent"
+        if lang == .chinese {
+            return sv == rv ? "\(zhNumber(sv))平" : "\(zhNumber(sv))比\(zhNumber(rv))"
+        } else {
+            return sv == rv ? "\(enNumber(sv)) all" : "\(enNumber(sv)) \(enNumber(rv))"
         }
     }
 
-    /// 英文把 0/15/30/40 读成 love/fifteen/thirty/forty；中文保留数字（TTS 直接读中文数）。
-    private func pointWord(_ label: String, _ lang: AnnounceLanguage) -> String {
-        guard lang == .english else { return label }
-        switch label {
-        case "0": return "love"
-        case "15": return "fifteen"
-        case "30": return "thirty"
-        case "40": return "forty"
-        default: return label
-        }
-    }
+    /// 中文数字：0 显式写「零」，其余交给 TTS 按中文读数字。
+    private func zhNumber(_ n: Int) -> String { n == 0 ? "零" : String(n) }
+
+    /// 英文数字：0 显式写 "zero"（抢七惯例），其余 TTS 正常读数字。
+    private func enNumber(_ n: Int) -> String { n == 0 ? "zero" : String(n) }
 }
