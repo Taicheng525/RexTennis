@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+
+# XcodeGen 生成物（由 project.yml 生成，运行 `xcodegen generate` 即可重建）
+RexTennis.xcodeproj/
+Sources/Info.plist
+
+# SwiftPM
+.swiftpm/
+Package.resolved
