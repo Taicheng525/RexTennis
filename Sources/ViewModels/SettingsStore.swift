@@ -1,9 +1,9 @@
 import Foundation
 
-/// 轻量偏好存储：记住播报语言、场地主题、队名（离线单场比赛不做历史持久化）。
+/// 轻量偏好存储：记住播报语言、裁判声音、队名（离线单场比赛不做历史持久化）。
 enum SettingsStore {
     private static let languageKey = "rex.announceLanguage"
-    private static let themeKey = "rex.courtTheme"
+    private static let umpireKey = "rex.umpireVoice"
     private static let nameMeKey = "rex.nameMe"
     private static let nameOppKey = "rex.nameOpp"
 
@@ -17,13 +17,13 @@ enum SettingsStore {
         }
     }
 
-    static var theme: CourtTheme {
+    static var umpire: UmpireVoice {
         get {
-            let raw = UserDefaults.standard.string(forKey: themeKey) ?? ""
-            return CourtTheme(rawValue: raw) ?? .wimbledon
+            let raw = UserDefaults.standard.string(forKey: umpireKey) ?? ""
+            return UmpireVoice(rawValue: raw) ?? .female
         }
         set {
-            UserDefaults.standard.set(newValue.rawValue, forKey: themeKey)
+            UserDefaults.standard.set(newValue.rawValue, forKey: umpireKey)
         }
     }
 

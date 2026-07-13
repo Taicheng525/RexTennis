@@ -12,15 +12,23 @@ final class MatchViewModel: ObservableObject {
             SettingsStore.language = language
         }
     }
+    @Published var umpire: UmpireVoice {
+        didSet {
+            announcer.umpire = umpire
+            SettingsStore.umpire = umpire
+        }
+    }
 
     private var history: [MatchState] = []
     private let announcer = Announcer()
     private let builder = AnnouncementBuilder()
 
-    init(config: MatchConfig, language: AnnounceLanguage) {
+    init(config: MatchConfig, language: AnnounceLanguage, umpire: UmpireVoice = SettingsStore.umpire) {
         self.state = MatchState(config: config)
         self.language = language
+        self.umpire = umpire
         self.announcer.language = language
+        self.announcer.umpire = umpire
     }
 
     var isFinished: Bool { state.phase == .finished }

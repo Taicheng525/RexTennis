@@ -1,17 +1,16 @@
 import SwiftUI
 
-/// 比赛进行页：主题化记分板 + 两个大得分按钮 + 撤销 / 再报一次。
+/// 比赛进行页：简约 dark 记分板 + 两个大得分按钮 + 撤销 / 再报一次。
 struct MatchView: View {
     @ObservedObject var viewModel: MatchViewModel
     @EnvironmentObject private var appModel: AppModel
 
     private var state: MatchState { viewModel.state }
-    private var theme: CourtTheme { appModel.theme }
     private var isChinese: Bool { viewModel.language == .chinese }
 
     var body: some View {
         ZStack {
-            CourtBackground(theme: theme)
+            AppBackground()
 
             VStack(spacing: 14) {
                 header
@@ -41,25 +40,20 @@ struct MatchView: View {
             } label: {
                 Label(isChinese ? "新比赛" : "New", systemImage: "arrow.counterclockwise")
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(theme.line.opacity(0.85))
+                    .foregroundStyle(RexTheme.text.opacity(0.85))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 7)
-                    .background(.black.opacity(0.25), in: Capsule())
+                    .background(RexTheme.card, in: Capsule())
+                    .overlay(Capsule().strokeBorder(RexTheme.hairline, lineWidth: 1))
             }
             .buttonStyle(.plain)
 
             Spacer()
 
-            VStack(spacing: 1) {
-                Text(phaseTitle)
-                    .font(.system(size: 13, weight: .bold, design: .serif))
-                    .tracking(1.5)
-                    .foregroundStyle(theme.line)
-                Text(theme.subtitle)
-                    .font(.system(size: 8, weight: .semibold))
-                    .tracking(2)
-                    .foregroundStyle(theme.line.opacity(0.5))
-            }
+            Text(phaseTitle)
+                .font(.system(size: 13, weight: .bold, design: .serif))
+                .tracking(2)
+                .foregroundStyle(RexTheme.textDim)
 
             Spacer()
 
@@ -68,9 +62,10 @@ struct MatchView: View {
             } label: {
                 Text(isChinese ? "中" : "EN")
                     .font(.subheadline.weight(.bold))
-                    .foregroundStyle(theme.line)
+                    .foregroundStyle(RexTheme.text)
                     .frame(width: 40, height: 30)
-                    .background(.black.opacity(0.25), in: Capsule())
+                    .background(RexTheme.card, in: Capsule())
+                    .overlay(Capsule().strokeBorder(RexTheme.hairline, lineWidth: 1))
             }
             .buttonStyle(.plain)
         }
@@ -94,12 +89,12 @@ struct MatchView: View {
             columnLabels
             playerRow(.me)
             Rectangle()
-                .fill(theme.line.opacity(0.2))
+                .fill(RexTheme.hairline)
                 .frame(height: 1)
                 .padding(.horizontal, 14)
             playerRow(.opponent)
         }
-        .themedCard(theme, cornerRadius: 22)
+        .rexCard(cornerRadius: 22)
     }
 
     /// 列标题（局 / 分）。
@@ -113,7 +108,7 @@ struct MatchView: View {
         }
         .font(.system(size: 10, weight: .bold, design: .serif))
         .tracking(1)
-        .foregroundStyle(theme.line.opacity(0.55))
+        .foregroundStyle(RexTheme.textFaint)
         .padding(.horizontal, 16)
         .padding(.top, 12)
     }
@@ -123,13 +118,13 @@ struct MatchView: View {
         return HStack(spacing: 12) {
             // 发球指示
             ZStack {
-                if isServer { TennisBall(size: 13) }
+                if isServer { TennisBall(size: 14) }
             }
-            .frame(width: 16)
+            .frame(width: 18)
 
             Text(state.config.name(for: side))
                 .font(.system(.title3, design: .serif).weight(.bold))
-                .foregroundStyle(theme.line)
+                .foregroundStyle(RexTheme.text)
                 .lineLimit(1)
                 .minimumScaleFactor(0.6)
 
@@ -139,17 +134,17 @@ struct MatchView: View {
             Text("\(state.games(for: side))")
                 .font(.system(size: 26, weight: .bold, design: .rounded))
                 .monospacedDigit()
-                .foregroundStyle(theme.line.opacity(0.9))
+                .foregroundStyle(RexTheme.text.opacity(0.9))
                 .frame(width: 52)
 
             // 当前局 / 抢七 得分
             Text(state.gameScoreLabel(for: side))
                 .font(.system(size: 40, weight: .heavy, design: .rounded))
                 .monospacedDigit()
-                .foregroundStyle(theme.badge)
+                .foregroundStyle(RexTheme.accent)
                 .frame(width: 86)
                 .padding(.vertical, 8)
-                .background(.black.opacity(0.25), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .background(.black.opacity(0.30), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 13)
@@ -167,17 +162,17 @@ struct MatchView: View {
                      ? "\(state.config.name(for: winner)) 胜 · \(state.games(for: winner)) : \(state.games(for: winner.other))"
                      : "\(state.config.name(for: winner)) wins · \(state.games(for: winner)) : \(state.games(for: winner.other))")
                     .font(.system(.title3, design: .serif).weight(.bold))
-                    .foregroundStyle(theme.line)
+                    .foregroundStyle(RexTheme.text)
             }
             .multilineTextAlignment(.center)
         } else if state.isDeuce {
             Text(isChinese ? "平分 · 金球" : "DEUCE · DECIDING POINT")
                 .font(.system(size: 13, weight: .heavy, design: .serif))
                 .tracking(1.5)
-                .foregroundStyle(theme.courtDeep)
+                .foregroundStyle(.black)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 7)
-                .background(theme.badge, in: Capsule())
+                .background(RexTheme.accent, in: Capsule())
         } else {
             Text(" ").font(.system(size: 13)).padding(.vertical, 7)
         }
@@ -188,8 +183,14 @@ struct MatchView: View {
     private var scoringControls: some View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
-                scoreButton(.me, fill: theme.homeAccent, textColor: theme.onHome)
-                scoreButton(.opponent, fill: theme.awayAccent, textColor: theme.onAway)
+                scoreButton(.me,
+                            fill: LinearGradient(colors: [RexTheme.green, RexTheme.green.opacity(0.72)],
+                                                 startPoint: .top, endPoint: .bottom),
+                            textColor: RexTheme.cream)
+                scoreButton(.opponent,
+                            fill: LinearGradient(colors: [RexTheme.cream, RexTheme.cream.opacity(0.85)],
+                                                 startPoint: .top, endPoint: .bottom),
+                            textColor: RexTheme.onCream)
             }
             HStack(spacing: 12) {
                 utilityButton(isChinese ? "撤销" : "Undo",
@@ -206,7 +207,7 @@ struct MatchView: View {
         }
     }
 
-    private func scoreButton(_ side: Side, fill: Color, textColor: Color) -> some View {
+    private func scoreButton(_ side: Side, fill: LinearGradient, textColor: Color) -> some View {
         Button {
             viewModel.score(side)
         } label: {
@@ -224,9 +225,9 @@ struct MatchView: View {
             .background(fill, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .strokeBorder(theme.line.opacity(0.25), lineWidth: 1)
+                    .strokeBorder(RexTheme.hairline, lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
+            .shadow(color: .black.opacity(0.35), radius: 10, y: 5)
         }
         .buttonStyle(.plain)
     }
@@ -235,13 +236,13 @@ struct MatchView: View {
         Button(action: action) {
             Label(title, systemImage: icon)
                 .font(.headline)
-                .foregroundStyle(theme.line.opacity(disabled ? 0.35 : 0.9))
+                .foregroundStyle(RexTheme.text.opacity(disabled ? 0.30 : 0.88))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 13)
-                .background(.black.opacity(0.25), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+                .background(RexTheme.card, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 15, style: .continuous)
-                        .strokeBorder(theme.line.opacity(0.15), lineWidth: 1)
+                        .strokeBorder(RexTheme.hairline, lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)
@@ -256,11 +257,15 @@ struct MatchView: View {
         } label: {
             Text(isChinese ? "再来一场" : "Play Again")
                 .font(.system(.title2, design: .serif).weight(.bold))
-                .foregroundStyle(theme.onHome)
+                .foregroundStyle(RexTheme.cream)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 17)
-                .background(theme.homeAccent, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
+                .background(
+                    LinearGradient(colors: [RexTheme.green, RexTheme.green.opacity(0.75)],
+                                   startPoint: .top, endPoint: .bottom),
+                    in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+                )
+                .shadow(color: .black.opacity(0.35), radius: 10, y: 5)
         }
         .buttonStyle(.plain)
     }

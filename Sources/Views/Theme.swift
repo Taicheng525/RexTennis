@@ -1,130 +1,40 @@
 import SwiftUI
 
-/// 三大满贯场地主题：温网（草地）/ 法网（红土）/ 美网（硬地）。
-enum CourtTheme: String, CaseIterable, Codable, Identifiable {
-    case wimbledon
-    case rolandGarros
-    case usOpen
+/// 全局调色板：简约高级 dark 风，草地绿 + 网球黄绿 + 奶白，无花哨背景。
+enum RexTheme {
+    /// 背景（近黑，带一点暖绿底色）。
+    static let bgTop = Color(red: 0.055, green: 0.070, blue: 0.058)
+    static let bgBottom = Color(red: 0.016, green: 0.020, blue: 0.016)
 
-    var id: String { rawValue }
+    /// 卡片与描边。
+    static let card = Color.white.opacity(0.055)
+    static let hairline = Color.white.opacity(0.10)
 
-    func title(zh: Bool) -> String {
-        switch self {
-        case .wimbledon: return zh ? "温网" : "Wimbledon"
-        case .rolandGarros: return zh ? "法网" : "Roland-Garros"
-        case .usOpen: return zh ? "美网" : "US Open"
-        }
-    }
+    /// 文字（暖奶白）。
+    static let text = Color(red: 0.96, green: 0.95, blue: 0.90)
+    static let textDim = text.opacity(0.55)
+    static let textFaint = text.opacity(0.35)
 
-    /// 主题副标题（营造赛事氛围的小字）。
-    var subtitle: String {
-        switch self {
-        case .wimbledon: return "THE CHAMPIONSHIPS"
-        case .rolandGarros: return "TERRE BATTUE · PARIS"
-        case .usOpen: return "FLUSHING MEADOWS · NY"
-        }
-    }
+    /// 网球黄绿（比分、强调）。
+    static let accent = Color(red: 0.84, green: 0.90, blue: 0.34)
 
-    // MARK: - 场地配色
+    /// 深草绿（我方按钮 / 主行动）。
+    static let green = Color(red: 0.13, green: 0.42, blue: 0.26)
 
-    /// 场地主色（背景渐变上端）。
-    var court: Color {
-        switch self {
-        case .wimbledon: return Color(red: 0.18, green: 0.42, blue: 0.24)   // 草地绿
-        case .rolandGarros: return Color(red: 0.78, green: 0.38, blue: 0.23) // 红土
-        case .usOpen: return Color(red: 0.13, green: 0.38, blue: 0.66)      // 硬地蓝
-        }
-    }
-
-    /// 场地深色（背景渐变下端）。
-    var courtDeep: Color {
-        switch self {
-        case .wimbledon: return Color(red: 0.07, green: 0.20, blue: 0.11)
-        case .rolandGarros: return Color(red: 0.47, green: 0.20, blue: 0.11)
-        case .usOpen: return Color(red: 0.05, green: 0.17, blue: 0.34)
-        }
-    }
-
-    /// 场地线 / 主文字色（奶白）。
-    var line: Color { Color(red: 0.97, green: 0.95, blue: 0.89) }
-
-    /// 我方按钮主色。
-    var homeAccent: Color {
-        switch self {
-        case .wimbledon: return Color(red: 0.33, green: 0.19, blue: 0.56)   // 温网紫
-        case .rolandGarros: return Color(red: 0.09, green: 0.36, blue: 0.26) // 法网深绿
-        case .usOpen: return Color(red: 0.95, green: 0.78, blue: 0.28)      // 美网黄
-        }
-    }
-
-    /// 我方按钮文字色。
-    var onHome: Color {
-        self == .usOpen ? Color(red: 0.06, green: 0.15, blue: 0.30) : line
-    }
-
-    /// 对方按钮：统一奶白（网球白），文字用场地深色。
-    var awayAccent: Color { line }
-    var onAway: Color { courtDeep }
-
-    /// 强调色（发球标记、平分/金球徽章、选中态）。
-    var badge: Color { Color(red: 0.87, green: 0.92, blue: 0.34) }          // 网球黄绿
+    /// 网球白（对方按钮）。
+    static let cream = Color(red: 0.96, green: 0.94, blue: 0.88)
+    static let onCream = Color(red: 0.07, green: 0.09, blue: 0.07)
 }
 
-// MARK: - 球场线背景
-
-/// 竖向网球场线条（半场示意），叠加在场地渐变上，低透明度。
-struct CourtLines: Shape {
-    func path(in rect: CGRect) -> Path {
-        var p = Path()
-        let court = rect.insetBy(dx: rect.width * 0.12, dy: rect.height * 0.10)
-
-        // 外框（双打线）
-        p.addRect(court)
-
-        // 单打边线
-        let singles = court.width * 0.13
-        p.move(to: CGPoint(x: court.minX + singles, y: court.minY))
-        p.addLine(to: CGPoint(x: court.minX + singles, y: court.maxY))
-        p.move(to: CGPoint(x: court.maxX - singles, y: court.minY))
-        p.addLine(to: CGPoint(x: court.maxX - singles, y: court.maxY))
-
-        // 球网（中线）
-        let netY = court.midY
-        p.move(to: CGPoint(x: rect.minX + rect.width * 0.06, y: netY))
-        p.addLine(to: CGPoint(x: rect.maxX - rect.width * 0.06, y: netY))
-
-        // 发球线（上下各一条，位于网与底线之间）
-        let serviceOffset = court.height * 0.22
-        for y in [netY - serviceOffset, netY + serviceOffset] {
-            p.move(to: CGPoint(x: court.minX + singles, y: y))
-            p.addLine(to: CGPoint(x: court.maxX - singles, y: y))
-        }
-
-        // 中央发球线（两条发球线之间）
-        p.move(to: CGPoint(x: court.midX, y: netY - serviceOffset))
-        p.addLine(to: CGPoint(x: court.midX, y: netY + serviceOffset))
-
-        // 底线中点标记
-        let tick = court.height * 0.015
-        p.move(to: CGPoint(x: court.midX, y: court.minY))
-        p.addLine(to: CGPoint(x: court.midX, y: court.minY + tick))
-        p.move(to: CGPoint(x: court.midX, y: court.maxY))
-        p.addLine(to: CGPoint(x: court.midX, y: court.maxY - tick))
-
-        return p
-    }
-}
-
-/// 主题背景：场地渐变 + 低透明度球场线。
-struct CourtBackground: View {
-    let theme: CourtTheme
-
+/// App 背景：近黑渐变 + 顶部一抹极淡的草绿光晕，干净不抢戏。
+struct AppBackground: View {
     var body: some View {
         ZStack {
-            LinearGradient(colors: [theme.court, theme.courtDeep],
+            LinearGradient(colors: [RexTheme.bgTop, RexTheme.bgBottom],
                            startPoint: .top, endPoint: .bottom)
-            CourtLines()
-                .stroke(theme.line.opacity(0.13), lineWidth: 1.5)
+            RadialGradient(colors: [RexTheme.green.opacity(0.22), .clear],
+                           center: .init(x: 0.5, y: -0.15),
+                           startRadius: 10, endRadius: 480)
         }
         .ignoresSafeArea()
     }
@@ -133,29 +43,51 @@ struct CourtBackground: View {
 // MARK: - 通用样式
 
 extension View {
-    /// 主题卡片：半透明深色底 + 场地线描边。
-    func themedCard(_ theme: CourtTheme, cornerRadius: CGFloat = 18) -> some View {
+    /// 深色卡片：半透明白底 + 发丝描边。
+    func rexCard(cornerRadius: CGFloat = 18) -> some View {
         self
-            .background(.black.opacity(0.28), in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .background(RexTheme.card, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder(Color(red: 0.97, green: 0.95, blue: 0.89).opacity(0.18), lineWidth: 1)
+                    .strokeBorder(RexTheme.hairline, lineWidth: 1)
             )
     }
 }
 
-/// 迷你网球（发球方指示）。
+/// 拟物迷你网球（发球方指示 / 标题装饰）：立体渐变 + 白色接缝线。
 struct TennisBall: View {
     var size: CGFloat = 12
 
     var body: some View {
-        Circle()
-            .fill(Color(red: 0.85, green: 0.91, blue: 0.32))
-            .overlay(
-                Circle().stroke(Color.white.opacity(0.7), lineWidth: size * 0.07)
-                    .scaleEffect(0.62)
-            )
-            .frame(width: size, height: size)
-            .shadow(color: .black.opacity(0.4), radius: 1, y: 1)
+        ZStack {
+            Circle()
+                .fill(
+                    RadialGradient(colors: [Color(red: 0.93, green: 0.97, blue: 0.45),
+                                            Color(red: 0.68, green: 0.76, blue: 0.20)],
+                                   center: .init(x: 0.35, y: 0.30),
+                                   startRadius: size * 0.05, endRadius: size * 0.85)
+                )
+            // 接缝：左右两段圆弧
+            SeamArc()
+                .stroke(Color.white.opacity(0.85), lineWidth: max(size * 0.07, 0.8))
+                .padding(size * 0.08)
+        }
+        .frame(width: size, height: size)
+        .shadow(color: .black.opacity(0.45), radius: size * 0.12, y: size * 0.10)
+    }
+}
+
+/// 网球接缝曲线（两条相对的弧）。
+private struct SeamArc: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        let w = rect.width, h = rect.height
+        p.move(to: CGPoint(x: rect.minX + w * 0.30, y: rect.minY))
+        p.addQuadCurve(to: CGPoint(x: rect.minX + w * 0.30, y: rect.maxY),
+                       control: CGPoint(x: rect.minX + w * 0.72, y: rect.midY))
+        p.move(to: CGPoint(x: rect.maxX - w * 0.30, y: rect.minY + h * 0.04))
+        p.addQuadCurve(to: CGPoint(x: rect.maxX - w * 0.30, y: rect.maxY - h * 0.04),
+                       control: CGPoint(x: rect.minX + w * 0.28, y: rect.midY))
+        return p
     }
 }

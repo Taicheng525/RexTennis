@@ -15,7 +15,14 @@ enum AnnounceLanguage: String, Equatable, Codable, CaseIterable {
     case english
 
     /// AVSpeechSynthesisVoice 使用的 BCP-47 语言代码。
-    var voiceCode: String { self == .chinese ? "zh-CN" : "en-US" }
+    /// 英文用英式（en-GB），贴近温网裁判口音。
+    var voiceCode: String { self == .chinese ? "zh-CN" : "en-GB" }
+}
+
+/// 裁判声音（性别可选，仿温网裁判风格）。
+enum UmpireVoice: String, Equatable, Codable, CaseIterable {
+    case female
+    case male
 }
 
 /// 一场比赛的赛制配置（不可变，随比赛全程固定）。

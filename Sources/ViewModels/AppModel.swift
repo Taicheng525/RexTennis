@@ -11,14 +11,14 @@ final class AppModel: ObservableObject {
     /// 赛前设置里选择的播报语言（默认读取上次偏好）。
     @Published var language: AnnounceLanguage = SettingsStore.language
 
-    /// 场地主题（温网/法网/美网），记住上次选择。
-    @Published var theme: CourtTheme = SettingsStore.theme {
-        didSet { SettingsStore.theme = theme }
+    /// 裁判声音（男/女），记住上次选择。
+    @Published var umpire: UmpireVoice = SettingsStore.umpire {
+        didSet { SettingsStore.umpire = umpire }
     }
 
     /// 开始一场新比赛。
     func startMatch(config: MatchConfig) {
-        match = MatchViewModel(config: config, language: language)
+        match = MatchViewModel(config: config, language: language, umpire: umpire)
     }
 
     /// 结束当前比赛，回到设置页。
