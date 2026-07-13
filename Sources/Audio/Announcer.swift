@@ -5,7 +5,7 @@ import AVFoundation
 /// 无实时引擎、无路由竞争崩溃。音频自动路由到已连接的蓝牙耳机。
 ///
 /// - **只报最新**：连续得分 debounce 合并，只播报最后一条。
-/// - **按内容选语言**：文本含中文用中文人声（中文队名在英文模式也能读对）。
+/// - **单一裁判人声**：整场只用「所选语言 + 所选性别」这一把嗓子，中途切换即时生效。
 /// - **文案缓存**：同一比分文案只烘焙一次，之后即点即播。
 /// - MainActor 串行化状态访问。
 @MainActor
@@ -23,9 +23,6 @@ final class Announcer {
 
     var language: AnnounceLanguage = .chinese
     var umpire: UmpireVoice = .female
-    /// 队名是否含中文（由 VM 在开赛时设置）。含中文时整场固定用中文人声，
-    /// 保证队名读得出、且全场只有一个裁判的声音。
-    var namesContainCJK: Bool = false
 
     // MARK: - 对外接口
 
@@ -105,11 +102,10 @@ final class Announcer {
 
     // MARK: - 人声挑选
 
-    /// 整场唯一的裁判人声：选中文播报或队名含中文 → 中文人声，否则所选语言人声。
-    /// 不再按每句文本切换——那会造成「第三个声音」在场上出现。
+    /// 整场唯一的裁判人声：完全跟随所选播报语言 + 性别，中途切换即时生效。
+    /// 不按每句文本切换语言——那会造成「第三个声音」在场上出现。
     private func matchVoice() -> AVSpeechSynthesisVoice? {
-        let code = (language == .chinese || namesContainCJK) ? "zh-CN" : language.voiceCode
-        return Self.pickVoice(languageCode: code, umpire: umpire)
+        Self.pickVoice(languageCode: language.voiceCode, umpire: umpire)
     }
 
     /// 常见系统人声的姓名→性别对照（很多人声的 gender 字段是「未指定」，
@@ -144,6 +140,8 @@ final class Announcer {
     }
 
     /// 从系统人声中挑选：先按（推断）性别过滤（无匹配则退回全部），再取音质最高的。
+    /// **完全确定性**：音质、区域匹配相同时用 identifier 兜底排序，
+    /// 保证同一设置每次都挑到同一把嗓子（否则男声会时好时坏、忽男忽女）。
     nonisolated static func pickVoice(languageCode: String, umpire: UmpireVoice) -> AVSpeechSynthesisVoice? {
         let prefix = String(languageCode.prefix(2))
         let all = AVSpeechSynthesisVoice.speechVoices()
@@ -161,14 +159,15 @@ final class Announcer {
             default: return 1
             }
         }
-        // 同音质下，优先精确匹配区域代码（如 zh-CN 优于 zh-TW）。
-        return pool.max {
-            let r0 = rank($0.quality), r1 = rank($1.quality)
-            if r0 != r1 { return r0 < r1 }
-            let e0 = $0.language == languageCode ? 1 : 0
-            let e1 = $1.language == languageCode ? 1 : 0
-            return e0 < e1
-        }
+        // 优先级：音质高 > 精确区域匹配（zh-CN 优于 zh-TW）> identifier 稳定兜底。
+        return pool.sorted { a, b in
+            let ra = rank(a.quality), rb = rank(b.quality)
+            if ra != rb { return ra > rb }
+            let ea = a.language == languageCode ? 1 : 0
+            let eb = b.language == languageCode ? 1 : 0
+            if ea != eb { return ea > eb }
+            return a.identifier < b.identifier
+        }.first
     }
 
     /// 当前语言是否已安装 增强/高级 音质人声（用于提示用户下载更真实的人声）。

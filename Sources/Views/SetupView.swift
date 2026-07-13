@@ -21,10 +21,13 @@ struct SetupView: View {
         return t.isEmpty ? (isChinese ? "对方" : "Team B") : t
     }
 
-    /// 整场实际使用的人声语言（与 Announcer 规则一致：中文播报或队名含中文 → 中文人声）。
-    private var effectiveVoiceCode: String {
-        (appModel.language == .chinese || resolvedNameMe.containsCJKText || resolvedNameOpp.containsCJKText)
-            ? "zh-CN" : appModel.language.voiceCode
+    /// 整场人声语言：完全跟随所选播报语言（与 Announcer 一致）。
+    private var effectiveVoiceCode: String { appModel.language.voiceCode }
+
+    /// 英文播报但队名是中文——英文人声读不出中文字，提示用户改用英文队名。
+    private var nameLanguageMismatch: Bool {
+        appModel.language == .english
+            && (resolvedNameMe.containsCJKText || resolvedNameOpp.containsCJKText)
     }
 
     var body: some View {
@@ -76,6 +79,14 @@ struct SetupView: View {
                                 Text(isChinese ? "男声" : "Male").tag(UmpireVoice.male)
                             }
                             .pickerStyle(.segmented)
+                        }
+                        if nameLanguageMismatch {
+                            Label(isChinese
+                                  ? "英文播报读不出中文队名，建议把队名也改成英文"
+                                  : "English voice can't read Chinese team names — use English names",
+                                  systemImage: "exclamationmark.triangle")
+                                .font(.caption2)
+                                .foregroundStyle(.orange.opacity(0.85))
                         }
                         if !Announcer.voiceAvailable(gender: appModel.umpire, languageCode: effectiveVoiceCode) {
                             Label(isChinese
