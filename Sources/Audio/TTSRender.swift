@@ -34,12 +34,16 @@ enum TTSRender {
                 synthLock.lock(); activeSynths[ObjectIdentifier(synth)] = nil; synthLock.unlock()
                 continuation.resume(returning: concat(chunks))
             }
-            synth.write(utterance) { buffer in
-                guard let pcm = buffer as? AVAudioPCMBuffer else { return }
-                if pcm.frameLength == 0 {
-                    finish()
-                } else if let copy = copyBuffer(pcm) {
-                    chunks.append(copy)
+            // 在普通 GCD 线程调用（避免在 Swift 并发协作线程触发系统的
+            // unsafeForcedSync 警告）
+            DispatchQueue.global(qos: .userInitiated).async {
+                synth.write(utterance) { buffer in
+                    guard let pcm = buffer as? AVAudioPCMBuffer else { return }
+                    if pcm.frameLength == 0 {
+                        finish()
+                    } else if let copy = copyBuffer(pcm) {
+                        chunks.append(copy)
+                    }
                 }
             }
             // 兜底：极端情况下没有零长度结尾包

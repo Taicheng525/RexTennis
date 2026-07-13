@@ -65,10 +65,11 @@ final class Announcer {
             let key = "\(text)|\(voice.identifier)"
             var data = self.cache[key]
             if data == nil {
-                // 裁判风格：稍慢克制的语速、略沉的音色
+                // 保持自然音高与接近正常的语速——改音高会让系统人声发音失真、
+                // 听感机械（中文尤甚）
                 guard let buffer = await TTSRender.render(text: text, voice: voice,
-                                                          rate: AVSpeechUtteranceDefaultSpeechRate * 0.88,
-                                                          pitch: 0.94) else { return }
+                                                          rate: AVSpeechUtteranceDefaultSpeechRate * 0.94,
+                                                          pitch: 1.0) else { return }
                 data = await OfflineFX.bakeStadiumPAAsync(buffer)
                 if data == nil {   // 偶发失败：稍候重试一次
                     try? await Task.sleep(nanoseconds: 250_000_000)

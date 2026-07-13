@@ -5,11 +5,13 @@ import AVFoundation
 /// 「player started when in a disconnected state」这类路由竞争崩溃。
 enum OfflineFX {
 
-    /// 三层声部参数（音分偏移, 变速, 起声延迟秒, 音量）——人群参差感
+    /// 三层声部参数（音分偏移, 变速, 起声延迟秒, 音量）。
+    /// 音分差收敛在 ±45、不变速——大音分差+变速会产生「外星人合唱」失真；
+    /// 人群感主要靠小的错位起声与两个不同人声。
     private static let chantLayers: [(pitch: Float, rate: Float, delay: Double, gain: Float)] = [
-        (-160, 0.97, 0.00, 0.85),
-        (   0, 1.00, 0.055, 0.95),
-        ( 170, 1.04, 0.12, 0.80),
+        (-45, 1.0, 0.00, 0.9),
+        (  0, 1.0, 0.05, 1.0),
+        ( 40, 1.0, 0.11, 0.85),
     ]
 
     // MARK: - 对外：两种烘焙
@@ -32,8 +34,8 @@ enum OfflineFX {
         // 关键：混响只有一个输入总线，多条声部链直连会互相顶掉（先连的变
         // disconnected，play 即崩）；必须经多输入的子混音器汇流后再进混响。
         let reverb = AVAudioUnitReverb()
-        reverb.loadFactoryPreset(.largeHall2)
-        reverb.wetDryMix = 52
+        reverb.loadFactoryPreset(.largeHall)
+        reverb.wetDryMix = 26   // 混响过重是「外星人感」的来源之一
         let submix = AVAudioMixerNode()
         engine.attach(reverb)
         engine.attach(submix)
@@ -48,13 +50,13 @@ enum OfflineFX {
             for layer in chantLayers {
                 let player = AVAudioPlayerNode()
                 let pitch = AVAudioUnitTimePitch()
-                pitch.pitch = layer.pitch + Float.random(in: -25...25)
+                pitch.pitch = layer.pitch + Float.random(in: -12...12)
                 pitch.rate = layer.rate
                 engine.attach(player)
                 engine.attach(pitch)
                 engine.connect(player, to: pitch, format: format)
                 engine.connect(pitch, to: submix, format: format)
-                player.volume = layer.gain * 0.62
+                player.volume = layer.gain * 0.85   // 口号要清晰可辨
 
                 let delaySec = 0.35 + layer.delay + Double(index % 2) * 0.03
                 guard let padded = TTSRender.padded(chant, leadingSeconds: delaySec) else { continue }
@@ -69,7 +71,7 @@ enum OfflineFX {
 
         return renderOffline(engine: engine, duration: duration) {
             if let bed, bed.frameLength > 0 {
-                bedPlayer.volume = 0.75
+                bedPlayer.volume = 0.60   // 垫底压低，让口号听得清
                 bedPlayer.scheduleBuffer(bed, at: nil, options: [], completionHandler: nil)
                 bedPlayer.play()
             }
@@ -91,13 +93,14 @@ enum OfflineFX {
         let echo = AVAudioUnitDelay()
         let reverb = AVAudioUnitReverb()
 
-        echo.delayTime = 0.17          // 170ms 短回声：现场喇叭反射感
-        echo.feedback = 16
-        echo.wetDryMix = 14            // 回声不盖人声
-        echo.lowPassCutoff = 3600      // 回声尾发闷，像远处反射
+        // 效果做轻：人声必须保持清晰自然，只留一点现场空间感
+        echo.delayTime = 0.16          // 短回声：现场喇叭反射感
+        echo.feedback = 10
+        echo.wetDryMix = 8             // 回声若隐若现，不盖人声
+        echo.lowPassCutoff = 3200      // 回声尾发闷，像远处反射
 
-        reverb.loadFactoryPreset(.largeRoom2)
-        reverb.wetDryMix = 22          // 空间感——现场而不是浴室
+        reverb.loadFactoryPreset(.largeRoom)
+        reverb.wetDryMix = 12          // 轻微空间感——过重会像机器人
 
         engine.attach(player)
         engine.attach(echo)

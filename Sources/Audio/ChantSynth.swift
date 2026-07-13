@@ -90,9 +90,10 @@ final class ChantSynth {
 
         var chants: [AVAudioPCMBuffer] = []
         for voice in voices {
+            // 自然音高语速——拔高音调会让人声失真发假
             if let rendered = await TTSRender.render(text: text, voice: voice,
-                                                     rate: AVSpeechUtteranceDefaultSpeechRate * 1.02,
-                                                     pitch: 1.12) {
+                                                     rate: AVSpeechUtteranceDefaultSpeechRate,
+                                                     pitch: 1.04) {
                 chants.append(rendered)
             }
         }
