@@ -28,11 +28,16 @@ enum OfflineFX {
         engine.attach(bedPlayer)
         engine.connect(bedPlayer, to: engine.mainMixerNode, format: format)
 
-        // 口号声部 → 变调 → 混响
+        // 口号声部 → 变调 → 子混音 → 混响
+        // 关键：混响只有一个输入总线，多条声部链直连会互相顶掉（先连的变
+        // disconnected，play 即崩）；必须经多输入的子混音器汇流后再进混响。
         let reverb = AVAudioUnitReverb()
         reverb.loadFactoryPreset(.largeHall2)
         reverb.wetDryMix = 52
+        let submix = AVAudioMixerNode()
         engine.attach(reverb)
+        engine.attach(submix)
+        engine.connect(submix, to: reverb, format: format)
         engine.connect(reverb, to: engine.mainMixerNode, format: format)
 
         var players: [(AVAudioPlayerNode, AVAudioPCMBuffer)] = []
@@ -48,7 +53,7 @@ enum OfflineFX {
                 engine.attach(player)
                 engine.attach(pitch)
                 engine.connect(player, to: pitch, format: format)
-                engine.connect(pitch, to: reverb, format: format)
+                engine.connect(pitch, to: submix, format: format)
                 player.volume = layer.gain * 0.62
 
                 let delaySec = 0.35 + layer.delay + Double(index % 2) * 0.03
@@ -120,15 +125,28 @@ enum OfflineFX {
                                                maximumFrameCount: chunkFrames)) != nil
     }
 
-    /// 所有烘焙串行执行：并发的离线引擎会与 iOS 音频会话活动竞争，
-    /// 触发「player started when in a disconnected state」。
+    /// 所有烘焙经此串行队列执行（独立 GCD 线程；在 Swift 并发协作线程上
+    /// 直接操作 AVAudio 引擎会触发 unsafeForcedSync 警告）。
     private static let bakeQueue = DispatchQueue(label: "rex.offlinefx.bake")
 
+    /// 异步入口：把烘焙调度到串行队列线程执行。
+    static func bakeCrowdChantAsync(chants: [AVAudioPCMBuffer], bed: AVAudioPCMBuffer?) async -> Data? {
+        await withCheckedContinuation { cont in
+            bakeQueue.async { cont.resume(returning: bakeCrowdChant(chants: chants, bed: bed)) }
+        }
+    }
+
+    static func bakeStadiumPAAsync(_ voice: AVAudioPCMBuffer) async -> Data? {
+        await withCheckedContinuation { cont in
+            bakeQueue.async { cont.resume(returning: bakeStadiumPA(voice)) }
+        }
+    }
+
     /// 跑完 duration 秒渲染，输出 WAV 数据（引擎须已启用手动模式并完成接线）。
-    /// 全程在串行队列上执行，并用 ObjC 异常捕获兜底（Swift 捕不了 NSException）。
+    /// ObjC 异常捕获兜底（Swift 捕不了 NSException）。
     private static func renderOffline(engine: AVAudioEngine, duration: Double,
                                       startPlayers: () -> Void) -> Data? {
-        bakeQueue.sync {
+        run {
             let format = TTSRender.standardFormat
             var failed = false
             let exception = RexCatchException {
@@ -168,6 +186,9 @@ enum OfflineFX {
             return wavData(interleaved: samples, channels: 2, sampleRate: Int(format.sampleRate))
         }
     }
+
+    /// 立即执行闭包（保持原缩进结构的辅助函数）。
+    private static func run<T>(_ body: () -> T) -> T { body() }
 
     /// 交织 Float32 样本 → 16-bit PCM WAV。
     private static func wavData(interleaved samples: [Float], channels: Int, sampleRate: Int) -> Data {

@@ -69,14 +69,10 @@ final class Announcer {
                 guard let buffer = await TTSRender.render(text: text, voice: voice,
                                                           rate: AVSpeechUtteranceDefaultSpeechRate * 0.88,
                                                           pitch: 0.94) else { return }
-                data = await Task.detached(priority: .userInitiated) {
-                    OfflineFX.bakeStadiumPA(buffer)
-                }.value
-                if data == nil {   // 偶发被会话活动打断：稍候重试一次
+                data = await OfflineFX.bakeStadiumPAAsync(buffer)
+                if data == nil {   // 偶发失败：稍候重试一次
                     try? await Task.sleep(nanoseconds: 250_000_000)
-                    data = await Task.detached(priority: .userInitiated) {
-                        OfflineFX.bakeStadiumPA(buffer)
-                    }.value
+                    data = await OfflineFX.bakeStadiumPAAsync(buffer)
                 }
                 if let data {
                     if self.cache.count > 80 { self.cache.removeAll() }   // 粗粒度限容

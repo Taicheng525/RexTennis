@@ -99,10 +99,7 @@ final class ChantSynth {
         guard !chants.isEmpty else { return nil }
 
         loadBedIfNeeded()
-        let bed = bedBuffer
-        return await Task.detached(priority: .userInitiated) {
-            OfflineFX.bakeCrowdChant(chants: chants, bed: bed)
-        }.value
+        return await OfflineFX.bakeCrowdChantAsync(chants: chants, bed: bedBuffer)
     }
 
     private func loadBedIfNeeded() {
