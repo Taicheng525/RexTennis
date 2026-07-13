@@ -54,16 +54,76 @@ extension View {
     }
 }
 
-/// 拟物迷你网球（发球方指示 / 标题装饰）：使用苹果官方 SF Symbol，真实网球外观。
+/// 写实拟物网球（发球方指示 / 标题装饰）：立体渐变球体 + 镜面高光 + 凹陷接缝 + 边缘暗角。
 struct TennisBall: View {
     var size: CGFloat = 12
 
     var body: some View {
-        Image(systemName: "tennisball.fill")
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .symbolRenderingMode(.multicolor)
-            .frame(width: size, height: size)
-            .shadow(color: .black.opacity(0.40), radius: size * 0.07, y: size * 0.05)
+        ZStack {
+            // ① 球体：多档径向渐变（左上受光亮、右下背光暗）
+            Circle().fill(
+                RadialGradient(
+                    colors: [
+                        Color(red: 0.89, green: 0.97, blue: 0.44),
+                        Color(red: 0.77, green: 0.88, blue: 0.27),
+                        Color(red: 0.56, green: 0.69, blue: 0.16),
+                        Color(red: 0.39, green: 0.49, blue: 0.11)
+                    ],
+                    center: UnitPoint(x: 0.36, y: 0.30),
+                    startRadius: 0, endRadius: size * 0.78
+                )
+            )
+
+            // ② 边缘暗角，强化球体积
+            Circle().fill(
+                RadialGradient(
+                    colors: [.clear, .clear, .black.opacity(0.32)],
+                    center: .center, startRadius: size * 0.28, endRadius: size * 0.52
+                )
+            )
+
+            // ③ 接缝凹槽（暗、略下移、微模糊）——制造凹陷立体感
+            TennisSeam()
+                .stroke(.black.opacity(0.22),
+                        style: StrokeStyle(lineWidth: max(size * 0.11, 1), lineCap: .round))
+                .offset(y: size * 0.012)
+                .blur(radius: max(size * 0.015, 0.5))
+
+            // ④ 接缝白线
+            TennisSeam()
+                .stroke(.white.opacity(0.95),
+                        style: StrokeStyle(lineWidth: max(size * 0.075, 0.8), lineCap: .round))
+
+            // ⑤ 镜面高光光斑（左上）
+            Ellipse()
+                .fill(
+                    RadialGradient(colors: [.white.opacity(0.65), .white.opacity(0.0)],
+                                   center: .center, startRadius: 0, endRadius: size * 0.20)
+                )
+                .frame(width: size * 0.38, height: size * 0.26)
+                .rotationEffect(.degrees(-28))
+                .offset(x: -size * 0.15, y: -size * 0.20)
+
+            // ⑥ 轮廓细描边（绒毛边缘）
+            Circle().strokeBorder(.black.opacity(0.10), lineWidth: max(size * 0.012, 0.4))
+        }
+        .frame(width: size, height: size)
+        .shadow(color: .black.opacity(0.42), radius: size * 0.06, y: size * 0.05)
+    }
+}
+
+/// 网球接缝：左右中线两端出发，一条鼓向上极、一条鼓向下极，形成经典纺锤接缝。
+private struct TennisSeam: Shape {
+    func path(in rect: CGRect) -> Path {
+        let w = rect.width, h = rect.height
+        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: rect.minX + w * x, y: rect.minY + h * y)
+        }
+        var path = Path()
+        path.move(to: pt(0.12, 0.50))
+        path.addQuadCurve(to: pt(0.88, 0.50), control: pt(0.50, -0.20))   // 上弧
+        path.move(to: pt(0.12, 0.50))
+        path.addQuadCurve(to: pt(0.88, 0.50), control: pt(0.50, 1.20))    // 下弧
+        return path
     }
 }
