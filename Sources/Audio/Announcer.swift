@@ -112,7 +112,38 @@ final class Announcer {
         return Self.pickVoice(languageCode: code, umpire: umpire)
     }
 
-    /// 从系统人声中挑选：先按性别过滤（无匹配则退回全部），再取音质最高的。
+    /// 常见系统人声的姓名→性别对照（很多人声的 gender 字段是「未指定」，
+    /// 只按字段过滤会漏掉真实存在的男/女声，导致切换无效）。
+    nonisolated private static let maleNameHints = [
+        "daniel", "arthur", "aaron", "fred", "gordon", "rishi", "alex",
+        "oliver", "james", "eddy", "reed", "rocko", "binbin", "han", "liang", "禾"
+    ]
+    nonisolated private static let femaleNameHints = [
+        "tingting", "婷", "yushu", "语舒", "yue", "meijia", "sinji", "shasha", "lili",
+        "kate", "serena", "martha", "stephanie", "susan", "samantha", "karen",
+        "moira", "tessa", "fiona", "ava", "allison", "nora", "zoe", "shelley",
+        "sandy", "flo", "kathy", "grandma", "nicky", "vicki", "princess"
+    ]
+
+    /// 推断人声性别：优先 gender 字段，未指定则按姓名对照猜。
+    nonisolated static func inferredGender(_ voice: AVSpeechSynthesisVoice) -> AVSpeechSynthesisVoiceGender {
+        if voice.gender != .unspecified { return voice.gender }
+        let n = voice.name.lowercased()
+        if maleNameHints.contains(where: { n.contains($0) }) { return .male }
+        if femaleNameHints.contains(where: { n.contains($0) }) { return .female }
+        return .unspecified
+    }
+
+    /// 指定语言下所选性别的人声是否存在（用于界面提示）。
+    nonisolated static func voiceAvailable(gender: UmpireVoice, languageCode: String) -> Bool {
+        let prefix = String(languageCode.prefix(2))
+        let wanted: AVSpeechSynthesisVoiceGender = gender == .female ? .female : .male
+        return AVSpeechSynthesisVoice.speechVoices().contains {
+            $0.language.hasPrefix(prefix) && inferredGender($0) == wanted
+        }
+    }
+
+    /// 从系统人声中挑选：先按（推断）性别过滤（无匹配则退回全部），再取音质最高的。
     nonisolated static func pickVoice(languageCode: String, umpire: UmpireVoice) -> AVSpeechSynthesisVoice? {
         let prefix = String(languageCode.prefix(2))
         let all = AVSpeechSynthesisVoice.speechVoices()
@@ -120,7 +151,7 @@ final class Announcer {
         guard !all.isEmpty else { return AVSpeechSynthesisVoice(language: languageCode) }
 
         let wanted: AVSpeechSynthesisVoiceGender = umpire == .female ? .female : .male
-        let genderMatched = all.filter { $0.gender == wanted }
+        let genderMatched = all.filter { inferredGender($0) == wanted }
         let pool = genderMatched.isEmpty ? all : genderMatched
 
         func rank(_ q: AVSpeechSynthesisVoiceQuality) -> Int {

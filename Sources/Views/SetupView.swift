@@ -21,6 +21,12 @@ struct SetupView: View {
         return t.isEmpty ? (isChinese ? "对方" : "Team B") : t
     }
 
+    /// 整场实际使用的人声语言（与 Announcer 规则一致：中文播报或队名含中文 → 中文人声）。
+    private var effectiveVoiceCode: String {
+        (appModel.language == .chinese || resolvedNameMe.containsCJKText || resolvedNameOpp.containsCJKText)
+            ? "zh-CN" : appModel.language.voiceCode
+    }
+
     var body: some View {
         ZStack {
             AppBackground()
@@ -71,7 +77,14 @@ struct SetupView: View {
                             }
                             .pickerStyle(.segmented)
                         }
-                        if !Announcer.hasEnhancedVoice(for: appModel.language) {
+                        if !Announcer.voiceAvailable(gender: appModel.umpire, languageCode: effectiveVoiceCode) {
+                            Label(isChinese
+                                  ? "当前未安装\(effectiveVoiceCode.hasPrefix("zh") ? "中文" : "英文")\(appModel.umpire == .male ? "男声" : "女声")，将用其他人声代替。可在 设置 → 辅助功能 → 朗读内容 → 声音 下载（离线可用）"
+                                  : "No \(appModel.umpire == .male ? "male" : "female") voice installed for this language — a fallback voice will be used. Download one in Settings → Accessibility → Spoken Content → Voices",
+                                  systemImage: "exclamationmark.triangle")
+                                .font(.caption2)
+                                .foregroundStyle(.orange.opacity(0.85))
+                        } else if !Announcer.hasEnhancedVoice(for: appModel.language) {
                             Label(isChinese
                                   ? "想要更真实的裁判人声：设置 → 辅助功能 → 朗读内容 → 声音，下载增强版人声（离线可用）"
                                   : "For a more natural umpire voice: Settings → Accessibility → Spoken Content → Voices, download an Enhanced voice",
