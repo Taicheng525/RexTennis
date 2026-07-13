@@ -118,3 +118,14 @@ enum TTSRender {
         return out
     }
 }
+
+extension String {
+    /// 是否包含中日韩表意文字（用于判断队名/文本是否需要中文人声）。
+    var containsCJKText: Bool {
+        unicodeScalars.contains {
+            (0x4E00...0x9FFF).contains($0.value) ||
+            (0x3400...0x4DBF).contains($0.value) ||
+            (0xF900...0xFAFF).contains($0.value)
+        }
+    }
+}

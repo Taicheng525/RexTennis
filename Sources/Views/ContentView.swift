@@ -22,13 +22,7 @@ struct ContentView: View {
 #if DEBUG
         guard appModel.match == nil else { return }
         let args = ProcessInfo.processInfo.arguments
-        if args.contains("-uiPreviewChant") {
-            appModel.startMatch(config: MatchConfig(targetGames: 4, firstServer: .me,
-                                                    nameMe: "多巴胺", nameOpp: "Ace队"))
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { [weak appModel] in
-                appModel?.match?.cheerTeam(.me)
-            }
-        } else if args.contains("-uiPreviewChangeEnds") {
+        if args.contains("-uiPreviewChangeEnds") {
             appModel.startMatch(config: MatchConfig(targetGames: 4, firstServer: .me))
             // 预置：我方 4-0 拿下第 1 局 → 触发换边（对方发球）。
             appModel.match?.debugApply([.me, .me, .me, .me])

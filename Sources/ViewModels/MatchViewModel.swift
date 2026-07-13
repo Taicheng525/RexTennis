@@ -26,7 +26,6 @@ final class MatchViewModel: ObservableObject {
     private let announcer = Announcer()
     private let builder = AnnouncementBuilder()
     private let soundEffects = SoundEffects()
-    private let chant = ChantSynth()
 
     init(config: MatchConfig, language: AnnounceLanguage, umpire: UmpireVoice = SettingsStore.umpire) {
         self.state = MatchState(config: config)
@@ -34,9 +33,8 @@ final class MatchViewModel: ObservableObject {
         self.umpire = umpire
         self.announcer.language = language
         self.announcer.umpire = umpire
-        // 预热两队的「喊名加油」，首次点击零等待
-        chant.prewarm(name: config.nameMe, language: language)
-        chant.prewarm(name: config.nameOpp, language: language)
+        // 全场用同一个裁判人声：含中文队名时整场用中文人声（保证队名可读且声音一致）
+        self.announcer.namesContainCJK = config.nameMe.containsCJKText || config.nameOpp.containsCJKText
     }
 
     var isFinished: Bool { state.phase == .finished }
@@ -76,14 +74,7 @@ final class MatchViewModel: ObservableObject {
     /// 播放一种欢呼音效（比赛中手动触发）。
     func cheer(_ kind: SoundEffects.Kind) {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        chant.stop()
         soundEffects.play(kind)
-    }
-
-    /// 人群喊某一队的队名加油（真实欢呼垫底 + 多声部口号）。
-    func cheerTeam(_ side: Side) {
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        chant.play(name: state.config.name(for: side), language: language)
     }
 
     /// 播报当前比分（供手动「再报一次」按钮使用）。

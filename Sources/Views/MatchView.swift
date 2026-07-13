@@ -206,11 +206,10 @@ struct MatchView: View {
     // MARK: - 欢呼音效
 
     private var cheerBar: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             cheerButton("hands.clap.fill", .applause)
+            cheerButton("music.mic", .cheer)
             cheerButton("party.popper.fill", .bigcheer)
-            teamChantButton(.me)
-            teamChantButton(.opponent)
         }
         .padding(.top, 6)
     }
@@ -220,9 +219,9 @@ struct MatchView: View {
             viewModel.cheer(kind)
         } label: {
             Image(systemName: icon)
-                .font(.system(size: 19, weight: .semibold))
+                .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(RexTheme.accent)
-                .frame(width: 56, height: 46)
+                .frame(width: 66, height: 46)
                 .background(RexTheme.card, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 15, style: .continuous)
@@ -232,31 +231,6 @@ struct MatchView: View {
         .buttonStyle(PressableButtonStyle())
     }
 
-    /// 喊队名加油：人群欢呼垫底 + 多声部口号
-    private func teamChantButton(_ side: Side) -> some View {
-        Button {
-            viewModel.cheerTeam(side)
-        } label: {
-            HStack(spacing: 5) {
-                Image(systemName: "megaphone.fill")
-                    .font(.system(size: 13, weight: .semibold))
-                Text(state.config.name(for: side))
-                    .font(.system(size: 13, weight: .bold))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.55)
-            }
-            .foregroundStyle(side == .me ? RexTheme.cream : RexTheme.onCream)
-            .frame(maxWidth: .infinity)
-            .frame(height: 46)
-            .background(side == .me ? RexTheme.green.opacity(0.85) : RexTheme.cream.opacity(0.9),
-                        in: RoundedRectangle(cornerRadius: 15, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 15, style: .continuous)
-                    .strokeBorder(RexTheme.hairline, lineWidth: 1)
-            )
-        }
-        .buttonStyle(PressableButtonStyle())
-    }
 
     // MARK: - 得分控制
 

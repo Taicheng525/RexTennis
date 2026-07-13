@@ -23,6 +23,9 @@ final class Announcer {
 
     var language: AnnounceLanguage = .chinese
     var umpire: UmpireVoice = .female
+    /// 队名是否含中文（由 VM 在开赛时设置）。含中文时整场固定用中文人声，
+    /// 保证队名读得出、且全场只有一个裁判的声音。
+    var namesContainCJK: Bool = false
 
     // MARK: - 对外接口
 
@@ -61,7 +64,7 @@ final class Announcer {
 
         playTask = Task { [weak self] in
             guard let self else { return }
-            guard let voice = self.voiceForText(text) else { return }
+            guard let voice = self.matchVoice() else { return }
             let key = "\(text)|\(voice.identifier)"
             var data = self.cache[key]
             if data == nil {
@@ -102,9 +105,10 @@ final class Announcer {
 
     // MARK: - 人声挑选
 
-    /// 按「文本内容语言」+ 裁判性别挑人声：含中文 → 中文人声，否则用所选语言人声。
-    private func voiceForText(_ text: String) -> AVSpeechSynthesisVoice? {
-        let code = text.containsCJKText ? "zh-CN" : language.voiceCode
+    /// 整场唯一的裁判人声：选中文播报或队名含中文 → 中文人声，否则所选语言人声。
+    /// 不再按每句文本切换——那会造成「第三个声音」在场上出现。
+    private func matchVoice() -> AVSpeechSynthesisVoice? {
+        let code = (language == .chinese || namesContainCJK) ? "zh-CN" : language.voiceCode
         return Self.pickVoice(languageCode: code, umpire: umpire)
     }
 
