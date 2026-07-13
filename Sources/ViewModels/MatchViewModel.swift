@@ -19,6 +19,9 @@ final class MatchViewModel: ObservableObject {
         }
     }
 
+    /// 上一分是否触发换边（界面文字提醒用，显示到下一分自动清除）。
+    @Published private(set) var showChangeEnds: Bool = false
+
     private var history: [MatchState] = []
     private let announcer = Announcer()
     private let builder = AnnouncementBuilder()
@@ -41,6 +44,7 @@ final class MatchViewModel: ObservableObject {
         var next = state
         let events = ScoreEngine.applyPoint(side, to: &next)
         state = next
+        showChangeEnds = events.contains(.changeEnds)
         let text = builder.utterance(for: events, state: next, language: language)
         announcer.speak(text)
     }
@@ -50,6 +54,7 @@ final class MatchViewModel: ObservableObject {
         guard let previous = history.popLast() else { return }
         announcer.stop()
         state = previous
+        showChangeEnds = false
         announcer.speak(builder.undoText(language))
     }
 
@@ -64,8 +69,10 @@ final class MatchViewModel: ObservableObject {
     /// 仅用于 UI 截图/预览：静默施加若干分，不触发语音、不入撤销栈。
     func debugApply(_ points: [Side]) {
         var next = state
-        for side in points { ScoreEngine.applyPoint(side, to: &next) }
+        var last: [MatchEvent] = []
+        for side in points { last = ScoreEngine.applyPoint(side, to: &next) }
         state = next
+        showChangeEnds = last.contains(.changeEnds)
     }
 #endif
 }

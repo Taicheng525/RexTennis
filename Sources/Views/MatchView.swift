@@ -165,6 +165,15 @@ struct MatchView: View {
                     .foregroundStyle(RexTheme.text)
             }
             .multilineTextAlignment(.center)
+        } else if viewModel.showChangeEnds {
+            Label(isChinese ? "换边" : "CHANGE ENDS", systemImage: "arrow.left.arrow.right")
+                .font(.system(size: 13, weight: .heavy, design: .serif))
+                .tracking(1.5)
+                .foregroundStyle(RexTheme.text)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(RexTheme.card, in: Capsule())
+                .overlay(Capsule().strokeBorder(RexTheme.accent.opacity(0.8), lineWidth: 1.5))
         } else if state.isDeuce {
             Text(isChinese ? "平分 · 金球" : "DEUCE · DECIDING POINT")
                 .font(.system(size: 13, weight: .heavy, design: .serif))

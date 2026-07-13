@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 赛前设置：队名、局数制、首发方、播报语言、裁判声音。
+/// 赛前设置：分三组——队伍、赛制、播报。全部有默认值，可直接开始。
 struct SetupView: View {
     @EnvironmentObject private var appModel: AppModel
 
@@ -12,7 +12,6 @@ struct SetupView: View {
 
     private var isChinese: Bool { appModel.language == .chinese }
 
-    /// 队名留空时的默认值。
     private var resolvedNameMe: String {
         let t = nameMe.trimmingCharacters(in: .whitespaces)
         return t.isEmpty ? (isChinese ? "我方" : "Team A") : t
@@ -29,50 +28,53 @@ struct SetupView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 16) {
                     titleBlock
-                        .padding(.top, 36)
-                        .padding(.bottom, 10)
+                        .padding(.top, 40)
+                        .padding(.bottom, 6)
 
-                    sectionCard(isChinese ? "队伍名称" : "TEAMS") {
-                        VStack(spacing: 10) {
-                            teamField(isChinese ? "我方名称" : "Your team", text: $nameMe, side: .me)
-                            teamField(isChinese ? "对方名称" : "Opponent team", text: $nameOpp, side: .opponent)
+                    // ① 队伍
+                    groupCard {
+                        teamField(isChinese ? "我方名称" : "Your team", text: $nameMe, side: .me)
+                        teamField(isChinese ? "对方名称" : "Opponent team", text: $nameOpp, side: .opponent)
+                    }
+
+                    // ② 赛制 + 首发
+                    groupCard {
+                        inlineRow(isChinese ? "赛制 · 一盘定胜负" : "FORMAT · SINGLE SET") {
+                            Picker("", selection: $targetGames) {
+                                Text(isChinese ? "4 局制" : "4 games").tag(4)
+                                Text(isChinese ? "6 局制" : "6 games").tag(6)
+                            }
+                            .pickerStyle(.segmented)
+                        }
+                        inlineRow(isChinese ? "首个发球方" : "FIRST SERVER") {
+                            Picker("", selection: $firstServer) {
+                                Text(resolvedNameMe).tag(Side.me)
+                                Text(resolvedNameOpp).tag(Side.opponent)
+                            }
+                            .pickerStyle(.segmented)
                         }
                     }
 
-                    sectionCard(isChinese ? "赛制 · 一盘定胜负" : "FORMAT · SINGLE SET") {
-                        Picker("", selection: $targetGames) {
-                            Text(isChinese ? "4 局制" : "4 games").tag(4)
-                            Text(isChinese ? "6 局制" : "6 games").tag(6)
+                    // ③ 播报（语言 + 裁判声音）
+                    groupCard {
+                        inlineRow(isChinese ? "播报语言" : "LANGUAGE") {
+                            Picker("", selection: $appModel.language) {
+                                Text("中文").tag(AnnounceLanguage.chinese)
+                                Text("English").tag(AnnounceLanguage.english)
+                            }
+                            .pickerStyle(.segmented)
                         }
-                        .pickerStyle(.segmented)
-                    }
-
-                    sectionCard(isChinese ? "首个发球方" : "FIRST SERVER") {
-                        Picker("", selection: $firstServer) {
-                            Text(resolvedNameMe).tag(Side.me)
-                            Text(resolvedNameOpp).tag(Side.opponent)
+                        inlineRow(isChinese ? "裁判声音" : "UMPIRE VOICE") {
+                            Picker("", selection: $appModel.umpire) {
+                                Text(isChinese ? "女声" : "Female").tag(UmpireVoice.female)
+                                Text(isChinese ? "男声" : "Male").tag(UmpireVoice.male)
+                            }
+                            .pickerStyle(.segmented)
                         }
-                        .pickerStyle(.segmented)
-                    }
-
-                    sectionCard(isChinese ? "播报语言" : "LANGUAGE") {
-                        Picker("", selection: $appModel.language) {
-                            Text("中文").tag(AnnounceLanguage.chinese)
-                            Text("English").tag(AnnounceLanguage.english)
-                        }
-                        .pickerStyle(.segmented)
-                    }
-
-                    sectionCard(isChinese ? "裁判声音" : "UMPIRE VOICE") {
-                        Picker("", selection: $appModel.umpire) {
-                            Text(isChinese ? "女裁判" : "Female").tag(UmpireVoice.female)
-                            Text(isChinese ? "男裁判" : "Male").tag(UmpireVoice.male)
-                        }
-                        .pickerStyle(.segmented)
                     }
 
                     startButton
-                        .padding(.top, 10)
+                        .padding(.top, 8)
                         .padding(.bottom, 30)
                 }
                 .padding(.horizontal, 22)
@@ -85,8 +87,8 @@ struct SetupView: View {
     // MARK: - 标题
 
     private var titleBlock: some View {
-        VStack(spacing: 9) {
-            TennisBall(size: 42)
+        VStack(spacing: 10) {
+            TennisBall(size: 46)
             Text("RexTennis")
                 .font(.system(size: 36, weight: .bold, design: .serif))
                 .foregroundStyle(RexTheme.text)
@@ -122,20 +124,27 @@ struct SetupView: View {
         )
     }
 
-    // MARK: - 卡片与开始按钮
+    // MARK: - 分组卡 & 行
 
-    private func sectionCard<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+    private func groupCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        VStack(spacing: 14) { content() }
+            .padding(14)
+            .frame(maxWidth: .infinity)
+            .rexCard()
+    }
+
+    private func inlineRow<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 7) {
             Text(title)
                 .font(.system(size: 11, weight: .bold, design: .serif))
-                .tracking(1.8)
+                .tracking(1.6)
                 .foregroundStyle(RexTheme.textDim)
             content()
         }
-        .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .rexCard()
     }
+
+    // MARK: - 开始按钮
 
     private var startButton: some View {
         Button {

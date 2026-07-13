@@ -54,40 +54,52 @@ extension View {
     }
 }
 
-/// 拟物迷你网球（发球方指示 / 标题装饰）：立体渐变 + 白色接缝线。
+/// 拟物迷你网球（发球方指示 / 标题装饰）：立体渐变球体 + 上下两条白色接缝弧。
 struct TennisBall: View {
     var size: CGFloat = 12
 
     var body: some View {
         ZStack {
+            // 球体：径向渐变（左上高光 → 边缘压深）
             Circle()
                 .fill(
-                    RadialGradient(colors: [Color(red: 0.93, green: 0.97, blue: 0.45),
-                                            Color(red: 0.68, green: 0.76, blue: 0.20)],
-                                   center: .init(x: 0.35, y: 0.30),
-                                   startRadius: size * 0.05, endRadius: size * 0.85)
+                    RadialGradient(colors: [Color(red: 0.91, green: 0.96, blue: 0.46),
+                                            Color(red: 0.74, green: 0.83, blue: 0.26),
+                                            Color(red: 0.55, green: 0.64, blue: 0.17)],
+                                   center: .init(x: 0.34, y: 0.30),
+                                   startRadius: size * 0.02, endRadius: size * 0.95)
                 )
-            // 接缝：左右两段圆弧
-            SeamArc()
-                .stroke(Color.white.opacity(0.85), lineWidth: max(size * 0.07, 0.8))
-                .padding(size * 0.08)
+            // 边缘暗角，增强球体感
+            Circle()
+                .fill(
+                    RadialGradient(colors: [.clear, .black.opacity(0.28)],
+                                   center: .center,
+                                   startRadius: size * 0.30, endRadius: size * 0.52)
+                )
+            // 接缝：靠近上极、下极各一条外凸的白弧
+            TennisSeam()
+                .stroke(Color.white.opacity(0.92),
+                        style: StrokeStyle(lineWidth: max(size * 0.08, 0.9), lineCap: .round))
         }
         .frame(width: size, height: size)
-        .shadow(color: .black.opacity(0.45), radius: size * 0.12, y: size * 0.10)
+        .shadow(color: .black.opacity(0.45), radius: size * 0.10, y: size * 0.08)
     }
 }
 
-/// 网球接缝曲线（两条相对的弧）。
-private struct SeamArc: Shape {
+/// 网球接缝：上极与下极各一条外凸的弧，形成经典网球「双弯」外观。
+private struct TennisSeam: Shape {
     func path(in rect: CGRect) -> Path {
-        var p = Path()
         let w = rect.width, h = rect.height
-        p.move(to: CGPoint(x: rect.minX + w * 0.30, y: rect.minY))
-        p.addQuadCurve(to: CGPoint(x: rect.minX + w * 0.30, y: rect.maxY),
-                       control: CGPoint(x: rect.minX + w * 0.72, y: rect.midY))
-        p.move(to: CGPoint(x: rect.maxX - w * 0.30, y: rect.minY + h * 0.04))
-        p.addQuadCurve(to: CGPoint(x: rect.maxX - w * 0.30, y: rect.maxY - h * 0.04),
-                       control: CGPoint(x: rect.minX + w * 0.28, y: rect.midY))
+        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: rect.minX + w * x, y: rect.minY + h * y)
+        }
+        var p = Path()
+        // 上弧（凸向顶部）
+        p.move(to: pt(0.13, 0.35))
+        p.addQuadCurve(to: pt(0.87, 0.35), control: pt(0.5, 0.00))
+        // 下弧（凸向底部）
+        p.move(to: pt(0.13, 0.65))
+        p.addQuadCurve(to: pt(0.87, 0.65), control: pt(0.5, 1.00))
         return p
     }
 }

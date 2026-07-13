@@ -48,7 +48,7 @@ struct AnnouncementBuilder {
             return tiebreakScoreCall(s, lang)
 
         case .changeEnds:
-            return zh ? "换边" : "Change ends"
+            return nil   // 换边只做界面文字提醒，不语音播报
 
         case .serveChange(let side):
             let name = s.config.name(for: side)

@@ -29,11 +29,15 @@ final class Announcer {
         }
     }
 
-    /// 朗读一句文案（追加到队列，不打断正在播报的内容）。
+    /// 朗读一句文案。**打断上一条未念完的**——快速连续得分时只播报最新比分，不排队。
     func speak(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         configureSessionIfNeeded()
+
+        if synthesizer.isSpeaking {
+            synthesizer.stopSpeaking(at: .immediate)
+        }
 
         let utterance = AVSpeechUtterance(string: trimmed)
         utterance.voice = selectedVoice()
