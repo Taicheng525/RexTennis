@@ -38,14 +38,24 @@ final class MatchViewModel: ObservableObject {
     var isFinished: Bool { state.phase == .finished }
     var canUndo: Bool { !history.isEmpty }
 
-    /// `side` 得一分：记录快照 → 更新状态 → 语音播报。
+    /// `side` 得一分：记录快照 → 更新状态 → 触感 → 语音播报。
     func score(_ side: Side) {
         guard !isFinished else { return }
         history.append(state)
         var next = state
         let events = ScoreEngine.applyPoint(side, to: &next)
-        state = next
+        withAnimation(.snappy(duration: 0.3)) { state = next }
         showChangeEnds = events.contains(.changeEnds)
+
+        // 触感：普通分轻震，局/盘结束加重
+        if next.phase == .finished {
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        } else if events.contains(where: { if case .gameWon = $0 { return true }; return false }) {
+            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        } else {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        }
+
         let text = builder.utterance(for: events, state: next, language: language)
         announcer.speak(text)
     }
@@ -54,12 +64,14 @@ final class MatchViewModel: ObservableObject {
     func undo() {
         guard let previous = history.popLast() else { return }
         announcer.stop()
-        state = previous
+        withAnimation(.snappy(duration: 0.3)) { state = previous }
         showChangeEnds = false
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 
     /// 播放一种欢呼音效（比赛中手动触发）。
     func cheer(_ kind: SoundEffects.Kind) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         soundEffects.play(kind)
     }
 

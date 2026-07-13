@@ -5,13 +5,16 @@ struct ContentView: View {
     @EnvironmentObject private var appModel: AppModel
 
     var body: some View {
-        Group {
+        ZStack {
             if let match = appModel.match {
                 MatchView(viewModel: match)
+                    .transition(.opacity.combined(with: .scale(scale: 1.02)))
             } else {
                 SetupView()
+                    .transition(.opacity)
             }
         }
+        .animation(.easeInOut(duration: 0.28), value: appModel.match == nil)
         .onAppear(perform: seedForUITestingIfNeeded)
     }
 

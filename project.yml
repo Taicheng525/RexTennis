@@ -20,6 +20,8 @@ targets:
     deploymentTarget: "17.0"
     sources:
       - path: Sources
+      - path: Resources
+        buildPhase: resources
     info:
       path: Sources/Info.plist
       properties:

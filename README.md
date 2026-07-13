@@ -64,3 +64,9 @@ Tests/
 ```
 
 计分逻辑集中在 `Sources/Models/ScoreEngine.swift`，为纯值类型逻辑、无 UI/音频依赖，便于单测与后续扩展（如多盘、比赛历史）。
+
+## 素材来源
+
+- 网球照片：[Closeup of a tennis ball (2).jpg](https://commons.wikimedia.org/wiki/File:Closeup_of_a_tennis_ball_(2).jpg)（Wikimedia Commons，**CC0** 公有领域，无需署名）
+- 欢呼音效 ×3：[Mixkit](https://mixkit.co/free-sound-effects/applause/)（Mixkit 免费授权，可商用、无需署名）：
+  Stadium crowd light applause / Auditorium moderate applause and cheering / Cheering crowd loud whistle

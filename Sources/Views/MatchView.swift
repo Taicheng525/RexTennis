@@ -146,6 +146,7 @@ struct MatchView: View {
             Text("\(state.games(for: side))")
                 .font(.system(size: 26, weight: .bold, design: .rounded))
                 .monospacedDigit()
+                .contentTransition(.numericText())
                 .foregroundStyle(RexTheme.text.opacity(0.9))
                 .frame(width: 52)
 
@@ -153,6 +154,7 @@ struct MatchView: View {
             Text(state.gameScoreLabel(for: side))
                 .font(.system(size: 40, weight: .heavy, design: .rounded))
                 .monospacedDigit()
+                .contentTransition(.numericText())
                 .foregroundStyle(RexTheme.accent)
                 .frame(width: 86)
                 .padding(.vertical, 8)
@@ -206,8 +208,8 @@ struct MatchView: View {
     private var cheerBar: some View {
         HStack(spacing: 12) {
             cheerButton("hands.clap.fill", .applause)
-            cheerButton("party.popper.fill", .cheer)
-            cheerButton("megaphone.fill", .horn)
+            cheerButton("music.mic", .cheer)
+            cheerButton("party.popper.fill", .bigcheer)
         }
         .padding(.top, 6)
     }
@@ -226,7 +228,7 @@ struct MatchView: View {
                         .strokeBorder(RexTheme.hairline, lineWidth: 1)
                 )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableButtonStyle())
     }
 
     // MARK: - 得分控制
@@ -280,7 +282,7 @@ struct MatchView: View {
             )
             .shadow(color: .black.opacity(0.35), radius: 10, y: 5)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableButtonStyle())
     }
 
     private func utilityButton(_ title: String, icon: String, disabled: Bool, action: @escaping () -> Void) -> some View {
@@ -296,7 +298,7 @@ struct MatchView: View {
                         .strokeBorder(RexTheme.hairline, lineWidth: 1)
                 )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableButtonStyle())
         .disabled(disabled)
     }
 
@@ -318,7 +320,7 @@ struct MatchView: View {
                 )
                 .shadow(color: .black.opacity(0.35), radius: 10, y: 5)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableButtonStyle())
     }
 }
 

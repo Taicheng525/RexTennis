@@ -42,6 +42,16 @@ struct AppBackground: View {
 
 // MARK: - 通用样式
 
+/// 按压反馈：轻微缩小 + 变暗，松手回弹。
+struct PressableButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.95 : 1)
+            .opacity(configuration.isPressed ? 0.85 : 1)
+            .animation(.spring(duration: 0.22), value: configuration.isPressed)
+    }
+}
+
 extension View {
     /// 深色卡片：半透明白底 + 发丝描边。
     func rexCard(cornerRadius: CGFloat = 18) -> some View {
@@ -54,76 +64,17 @@ extension View {
     }
 }
 
-/// 写实拟物网球（发球方指示 / 标题装饰）：立体渐变球体 + 镜面高光 + 凹陷接缝 + 边缘暗角。
+/// 真实网球（发球方指示 / 标题装饰）：CC0 实拍照片（毛毡质感 + 接缝），圆形裁剪。
 struct TennisBall: View {
     var size: CGFloat = 12
 
     var body: some View {
-        ZStack {
-            // ① 球体：多档径向渐变（左上受光亮、右下背光暗）
-            Circle().fill(
-                RadialGradient(
-                    colors: [
-                        Color(red: 0.89, green: 0.97, blue: 0.44),
-                        Color(red: 0.77, green: 0.88, blue: 0.27),
-                        Color(red: 0.56, green: 0.69, blue: 0.16),
-                        Color(red: 0.39, green: 0.49, blue: 0.11)
-                    ],
-                    center: UnitPoint(x: 0.36, y: 0.30),
-                    startRadius: 0, endRadius: size * 0.78
-                )
-            )
-
-            // ② 边缘暗角，强化球体积
-            Circle().fill(
-                RadialGradient(
-                    colors: [.clear, .clear, .black.opacity(0.32)],
-                    center: .center, startRadius: size * 0.28, endRadius: size * 0.52
-                )
-            )
-
-            // ③ 接缝凹槽（暗、略下移、微模糊）——制造凹陷立体感
-            TennisSeam()
-                .stroke(.black.opacity(0.22),
-                        style: StrokeStyle(lineWidth: max(size * 0.11, 1), lineCap: .round))
-                .offset(y: size * 0.012)
-                .blur(radius: max(size * 0.015, 0.5))
-
-            // ④ 接缝白线
-            TennisSeam()
-                .stroke(.white.opacity(0.95),
-                        style: StrokeStyle(lineWidth: max(size * 0.075, 0.8), lineCap: .round))
-
-            // ⑤ 镜面高光光斑（左上）
-            Ellipse()
-                .fill(
-                    RadialGradient(colors: [.white.opacity(0.65), .white.opacity(0.0)],
-                                   center: .center, startRadius: 0, endRadius: size * 0.20)
-                )
-                .frame(width: size * 0.38, height: size * 0.26)
-                .rotationEffect(.degrees(-28))
-                .offset(x: -size * 0.15, y: -size * 0.20)
-
-            // ⑥ 轮廓细描边（绒毛边缘）
-            Circle().strokeBorder(.black.opacity(0.10), lineWidth: max(size * 0.012, 0.4))
-        }
-        .frame(width: size, height: size)
-        .shadow(color: .black.opacity(0.42), radius: size * 0.06, y: size * 0.05)
-    }
-}
-
-/// 网球接缝：从顶到底的 S 形波浪曲线，把球面分成两片水滴——真实网球正面外观。
-private struct TennisSeam: Shape {
-    func path(in rect: CGRect) -> Path {
-        let w = rect.width, h = rect.height
-        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
-            CGPoint(x: rect.minX + w * x, y: rect.minY + h * y)
-        }
-        var path = Path()
-        // 两段在中点平滑衔接（切线同向）→ 标准 S
-        path.move(to: pt(0.50, 0.05))
-        path.addQuadCurve(to: pt(0.50, 0.50), control: pt(0.06, 0.27))   // 上半：左凸
-        path.addQuadCurve(to: pt(0.50, 0.95), control: pt(0.94, 0.73))   // 下半：右凸
-        return path
+        Image("TennisBallPhoto")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: size, height: size)
+            .clipShape(Circle())
+            .overlay(Circle().strokeBorder(.black.opacity(0.15), lineWidth: max(size * 0.012, 0.4)))
+            .shadow(color: .black.opacity(0.45), radius: size * 0.07, y: size * 0.05)
     }
 }
