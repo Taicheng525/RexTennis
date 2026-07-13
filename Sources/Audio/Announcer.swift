@@ -59,9 +59,20 @@ final class Announcer {
 
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = voice(for: text)
-        utterance.rate = AVSpeechUtteranceDefaultSpeechRate * 0.96
+        // 裁判风格：稍慢而克制的语速、略沉的音色、报分前的短停顿
+        utterance.rate = AVSpeechUtteranceDefaultSpeechRate * 0.88
+        utterance.pitchMultiplier = 0.94
+        utterance.preUtteranceDelay = 0.08
         utterance.postUtteranceDelay = 0.1
         synthesizer.speak(utterance)
+    }
+
+    /// 当前语言是否已安装 增强/高级 音质人声（用于提示用户下载更真实的人声）。
+    static func hasEnhancedVoice(for language: AnnounceLanguage) -> Bool {
+        let prefix = String(language.voiceCode.prefix(2))
+        return AVSpeechSynthesisVoice.speechVoices().contains {
+            $0.language.hasPrefix(prefix) && ($0.quality == .enhanced || $0.quality == .premium)
+        }
     }
 
     /// 配置播放会话：`.playback` 默认走蓝牙 A2DP；`.duckOthers` 播报时压低其他音乐、结束自动恢复。

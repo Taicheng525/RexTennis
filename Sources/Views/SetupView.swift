@@ -71,6 +71,14 @@ struct SetupView: View {
                             }
                             .pickerStyle(.segmented)
                         }
+                        if !Announcer.hasEnhancedVoice(for: appModel.language) {
+                            Label(isChinese
+                                  ? "想要更真实的裁判人声：设置 → 辅助功能 → 朗读内容 → 声音，下载增强版人声（离线可用）"
+                                  : "For a more natural umpire voice: Settings → Accessibility → Spoken Content → Voices, download an Enhanced voice",
+                                  systemImage: "info.circle")
+                                .font(.caption2)
+                                .foregroundStyle(RexTheme.textFaint)
+                        }
                     }
 
                     startButton
