@@ -194,11 +194,16 @@ enum OfflineFX {
     private static func run<T>(_ body: () -> T) -> T { body() }
 
     /// 交织 Float32 样本 → 16-bit PCM WAV。
+    /// 峰值归一化：超过满幅时整体线性压低——硬削波会把响的人声（尤其增强
+    /// 人声+混响叠加后）切出明显失真。
     private static func wavData(interleaved samples: [Float], channels: Int, sampleRate: Int) -> Data {
+        var peak: Float = 0.0001
+        for s in samples { peak = max(peak, abs(s)) }
+        let gain: Float = peak > 0.95 ? 0.95 / peak : 1.0
+
         var pcm = Data(capacity: samples.count * 2)
         for s in samples {
-            let clamped = max(-1, min(1, s))
-            var v = Int16(clamped * 32767)
+            var v = Int16(max(-1, min(1, s * gain)) * 32767)
             withUnsafeBytes(of: &v) { pcm.append(contentsOf: $0) }
         }
         let blockAlign = channels * 2

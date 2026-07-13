@@ -40,6 +40,12 @@ final class MatchViewModel: ObservableObject {
     var isFinished: Bool { state.phase == .finished }
     var canUndo: Bool { !history.isEmpty }
 
+    /// 实际播报语言：队名含中文时整场人声是中文，文案也用中文——
+    /// 中文人声念英文句子会含混不清。
+    private var effectiveLanguage: AnnounceLanguage {
+        announcer.namesContainCJK ? .chinese : language
+    }
+
     /// `side` 得一分：记录快照 → 更新状态 → 触感 → 语音播报。
     func score(_ side: Side) {
         guard !isFinished else { return }
@@ -58,7 +64,7 @@ final class MatchViewModel: ObservableObject {
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         }
 
-        let text = builder.utterance(for: events, state: next, language: language)
+        let text = builder.utterance(for: events, state: next, language: effectiveLanguage)
         announcer.speak(text)
     }
 
@@ -81,7 +87,7 @@ final class MatchViewModel: ObservableObject {
     func repeatCurrentScore() {
         let event: MatchEvent = state.phase == .tiebreak ? .tiebreakPoint : .point
         guard !isFinished else { return }
-        announcer.speak(builder.utterance(for: [event], state: state, language: language))
+        announcer.speak(builder.utterance(for: [event], state: state, language: effectiveLanguage))
     }
 
 #if DEBUG

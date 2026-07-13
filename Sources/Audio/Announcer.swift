@@ -116,7 +116,7 @@ final class Announcer {
     /// 只按字段过滤会漏掉真实存在的男/女声，导致切换无效）。
     nonisolated private static let maleNameHints = [
         "daniel", "arthur", "aaron", "fred", "gordon", "rishi", "alex",
-        "oliver", "james", "eddy", "reed", "rocko", "binbin", "han", "liang", "禾"
+        "oliver", "eddy", "reed", "rocko", "binbin", "禾"
     ]
     nonisolated private static let femaleNameHints = [
         "tingting", "婷", "yushu", "语舒", "yue", "meijia", "sinji", "shasha", "lili",
