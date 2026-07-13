@@ -128,6 +128,14 @@ final class ScoreEngineTests: XCTestCase {
         XCTAssertEqual(s.winner, .me)
         XCTAssertEqual(s.gamesMe, 5)     // N+1 : N
         XCTAssertEqual(s.gamesOpp, 4)
+        XCTAssertTrue(s.finishedByTiebreak)
+    }
+
+    func testNonTiebreakWinNotFlagged() {
+        var s = makeState(target: 4)
+        for _ in 0..<4 { winGame(.me, &s) }   // 4-0 直接胜盘
+        XCTAssertEqual(s.phase, .finished)
+        XCTAssertFalse(s.finishedByTiebreak)
     }
 
     func testTiebreak_needsMarginOfTwo() {
@@ -266,5 +274,21 @@ final class ScoreEngineTests: XCTestCase {
         s.gamesMe = 4; s.gamesOpp = 2; s.winner = .me; s.phase = .finished
         XCTAssertEqual(builder.utterance(for: [.setWon(.me)], state: s, language: .chinese),
                        "我方以4比2拿下本盘，比赛结束")
+    }
+
+    func testAnnouncementTiebreakSetWon_zh() {
+        let builder = AnnouncementBuilder()
+        var s = makeState()
+        s.gamesMe = 5; s.gamesOpp = 4; s.winner = .me; s.phase = .finished
+        s.finishedByTiebreak = true
+        XCTAssertEqual(builder.utterance(for: [.setWon(.me)], state: s, language: .chinese),
+                       "我方以5比4抢七拿下本盘，比赛结束")
+    }
+
+    func testAnnouncementChangeEnds() {
+        let builder = AnnouncementBuilder()
+        let s = makeState()
+        XCTAssertEqual(builder.utterance(for: [.changeEnds], state: s, language: .chinese), "换边")
+        XCTAssertEqual(builder.utterance(for: [.changeEnds], state: s, language: .english), "Change ends")
     }
 }

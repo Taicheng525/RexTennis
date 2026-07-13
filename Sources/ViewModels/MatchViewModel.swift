@@ -25,6 +25,7 @@ final class MatchViewModel: ObservableObject {
     private var history: [MatchState] = []
     private let announcer = Announcer()
     private let builder = AnnouncementBuilder()
+    private let soundEffects = SoundEffects()
 
     init(config: MatchConfig, language: AnnounceLanguage, umpire: UmpireVoice = SettingsStore.umpire) {
         self.state = MatchState(config: config)
@@ -55,6 +56,11 @@ final class MatchViewModel: ObservableObject {
         announcer.stop()
         state = previous
         showChangeEnds = false
+    }
+
+    /// 播放一种欢呼音效（比赛中手动触发）。
+    func cheer(_ kind: SoundEffects.Kind) {
+        soundEffects.play(kind)
     }
 
     /// 播报当前比分（供手动「再报一次」按钮使用）。

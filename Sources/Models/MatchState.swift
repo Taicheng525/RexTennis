@@ -31,6 +31,8 @@ struct MatchState: Equatable, Codable {
 
     var phase: MatchPhase = .playing
     var winner: Side?
+    /// 本盘是否由抢七决出（用于胜盘播报「抢七拿下本盘」）。
+    var finishedByTiebreak: Bool = false
 
     init(config: MatchConfig) {
         self.config = config

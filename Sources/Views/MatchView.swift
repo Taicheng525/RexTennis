@@ -17,6 +17,7 @@ struct MatchView: View {
                 Spacer(minLength: 0)
                 scoreboard
                 statusHint
+                cheerBar
                 Spacer(minLength: 0)
                 if viewModel.isFinished {
                     finishedControls
@@ -198,6 +199,34 @@ struct MatchView: View {
         } else {
             Text(" ").font(.system(size: 13)).padding(.vertical, 7)
         }
+    }
+
+    // MARK: - 欢呼音效
+
+    private var cheerBar: some View {
+        HStack(spacing: 12) {
+            cheerButton("hands.clap.fill", .applause)
+            cheerButton("party.popper.fill", .cheer)
+            cheerButton("megaphone.fill", .horn)
+        }
+        .padding(.top, 6)
+    }
+
+    private func cheerButton(_ icon: String, _ kind: SoundEffects.Kind) -> some View {
+        Button {
+            viewModel.cheer(kind)
+        } label: {
+            Image(systemName: icon)
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(RexTheme.accent)
+                .frame(width: 66, height: 46)
+                .background(RexTheme.card, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .strokeBorder(RexTheme.hairline, lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - 得分控制

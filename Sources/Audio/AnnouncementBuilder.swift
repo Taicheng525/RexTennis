@@ -48,7 +48,7 @@ struct AnnouncementBuilder {
             return tiebreakScoreCall(s, lang)
 
         case .changeEnds:
-            return nil   // 换边只做界面文字提醒，不语音播报
+            return zh ? "换边" : "Change ends"   // 简洁语音 + 界面文字双提示
 
         case .serveChange(let side):
             let name = s.config.name(for: side)
@@ -58,10 +58,15 @@ struct AnnouncementBuilder {
             let name = s.config.name(for: side)
             let wg = s.games(for: side)
             let lg = s.games(for: side.other)
+            let tb = s.finishedByTiebreak
             if zh {
-                return "\(name)以\(wg)比\(lg)拿下本盘，比赛结束"
+                return tb
+                    ? "\(name)以\(wg)比\(lg)抢七拿下本盘，比赛结束"
+                    : "\(name)以\(wg)比\(lg)拿下本盘，比赛结束"
             } else {
-                return "Game, set and match, \(name). \(wg) games to \(lg)"
+                return tb
+                    ? "Game, set and match, \(name). \(wg) games to \(lg), on the tie-break"
+                    : "Game, set and match, \(name). \(wg) games to \(lg)"
             }
         }
     }

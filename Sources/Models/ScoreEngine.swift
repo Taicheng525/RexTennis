@@ -118,6 +118,7 @@ enum ScoreEngine {
     }
 
     private static func finishMatch(winner: Side, to s: inout MatchState, events: inout [MatchEvent]) {
+        s.finishedByTiebreak = (s.phase == .tiebreak)   // 记录是否抢七决出
         s.phase = .finished
         s.winner = winner
         events.append(.setWon(winner))
