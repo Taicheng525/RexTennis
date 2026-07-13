@@ -1,27 +1,30 @@
 import AVFoundation
 
-/// 离线语音播报：配置音频会话并用系统 TTS 朗读文案，自动路由到已连接的蓝牙耳机。
+/// 离线语音播报：TTS 渲染后**离线烘焙**现场 PA 效果（短延迟回声 + 球场混响），
+/// 模拟裁判透过场内广播报分的空间感；运行时用 AVAudioPlayer 播放成品，
+/// 无实时引擎、无路由竞争崩溃。音频自动路由到已连接的蓝牙耳机。
 ///
-/// 关键点：
-/// - **只报最新**：连续得分时用 debounce 合并，只播报最后一条；打断上一条时留出足够
-///   间隔再朗读，规避 `stopSpeaking` 后立即 `speak` 被系统吞掉、导致「没声音」的坑。
-/// - **按内容选语言**：文本含中文则用中文人声，否则用所选语言人声——这样即便英文
-///   播报模式下，用户输入的中文队名也能被正确读出，而不是被跳过或错读。
-/// - 声音仿温网裁判：英文用英式口音（en-GB），可选男/女，按「性别匹配 → 音质最高」挑选。
+/// - **只报最新**：连续得分 debounce 合并，只播报最后一条。
+/// - **按内容选语言**：文本含中文用中文人声（中文队名在英文模式也能读对）。
+/// - **文案缓存**：同一比分文案只烘焙一次，之后即点即播。
+/// - MainActor 串行化状态访问。
+@MainActor
 final class Announcer {
 
-    private let synthesizer = AVSpeechSynthesizer()
     private var sessionConfigured = false
-
     private var pendingText: String?
     private var pendingWork: DispatchWorkItem?
-    private var voiceCache: [String: AVSpeechSynthesisVoice] = [:]
+    private var playTask: Task<Void, Never>?
+    private var player: AVAudioPlayer?
+    private var cache: [String: Data] = [:]
 
-    /// 打断后到重新朗读之间的间隔——足够长以避开 stopSpeaking 的吞音问题，又几乎无感。
-    private let relaunchDelay: TimeInterval = 0.16
+    /// 合并快速连点的间隔。
+    private let debounceDelay: TimeInterval = 0.16
 
     var language: AnnounceLanguage = .chinese
     var umpire: UmpireVoice = .female
+
+    // MARK: - 对外接口
 
     /// 朗读一句文案。连续调用只会播报最后一条。
     func speak(_ text: String) {
@@ -31,51 +34,63 @@ final class Announcer {
 
         pendingText = trimmed
         pendingWork?.cancel()
+        playTask?.cancel()
+        player?.stop()   // 打断上一条（连点场景）
 
-        // 打断正在朗读的上一条（连点场景）。
-        if synthesizer.isSpeaking {
-            synthesizer.stopSpeaking(at: .immediate)
+        let work = DispatchWorkItem { [weak self] in
+            Task { @MainActor [weak self] in self?.flushPending() }
         }
-
-        // 延迟一点再真正朗读：合并快速连点，且给 stopSpeaking 留出恢复时间。
-        let work = DispatchWorkItem { [weak self] in self?.flushPending() }
         pendingWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + relaunchDelay, execute: work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + debounceDelay, execute: work)
     }
 
-    /// 立即停止并清空待播（撤销、新比赛时清场，且不发出任何声音）。
+    /// 立即停止并清空待播（撤销、新比赛清场，不发声）。
     func stop() {
         pendingWork?.cancel()
         pendingWork = nil
         pendingText = nil
-        if synthesizer.isSpeaking {
-            synthesizer.stopSpeaking(at: .immediate)
-        }
+        playTask?.cancel()
+        player?.stop()
     }
+
+    // MARK: - 渲染与播放
 
     private func flushPending() {
         guard let text = pendingText else { return }
         pendingText = nil
 
-        let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = voice(for: text)
-        // 裁判风格：稍慢而克制的语速、略沉的音色、报分前的短停顿
-        utterance.rate = AVSpeechUtteranceDefaultSpeechRate * 0.88
-        utterance.pitchMultiplier = 0.94
-        utterance.preUtteranceDelay = 0.08
-        utterance.postUtteranceDelay = 0.1
-        synthesizer.speak(utterance)
-    }
-
-    /// 当前语言是否已安装 增强/高级 音质人声（用于提示用户下载更真实的人声）。
-    static func hasEnhancedVoice(for language: AnnounceLanguage) -> Bool {
-        let prefix = String(language.voiceCode.prefix(2))
-        return AVSpeechSynthesisVoice.speechVoices().contains {
-            $0.language.hasPrefix(prefix) && ($0.quality == .enhanced || $0.quality == .premium)
+        playTask = Task { [weak self] in
+            guard let self else { return }
+            guard let voice = self.voiceForText(text) else { return }
+            let key = "\(text)|\(voice.identifier)"
+            var data = self.cache[key]
+            if data == nil {
+                // 裁判风格：稍慢克制的语速、略沉的音色
+                guard let buffer = await TTSRender.render(text: text, voice: voice,
+                                                          rate: AVSpeechUtteranceDefaultSpeechRate * 0.88,
+                                                          pitch: 0.94) else { return }
+                data = await Task.detached(priority: .userInitiated) {
+                    OfflineFX.bakeStadiumPA(buffer)
+                }.value
+                if data == nil {   // 偶发被会话活动打断：稍候重试一次
+                    try? await Task.sleep(nanoseconds: 250_000_000)
+                    data = await Task.detached(priority: .userInitiated) {
+                        OfflineFX.bakeStadiumPA(buffer)
+                    }.value
+                }
+                if let data {
+                    if self.cache.count > 80 { self.cache.removeAll() }   // 粗粒度限容
+                    self.cache[key] = data
+                }
+            }
+            guard let data, !Task.isCancelled else { return }
+            self.player?.stop()
+            self.player = try? AVAudioPlayer(data: data)
+            self.player?.play()
         }
     }
 
-    /// 配置播放会话：`.playback` 默认走蓝牙 A2DP；`.duckOthers` 播报时压低其他音乐、结束自动恢复。
+    /// 配置播放会话：`.playback` 默认走蓝牙；`.duckOthers` 播报时压低其他音乐。
     private func configureSessionIfNeeded() {
         guard !sessionConfigured else { return }
         let session = AVAudioSession.sharedInstance()
@@ -91,17 +106,13 @@ final class Announcer {
     // MARK: - 人声挑选
 
     /// 按「文本内容语言」+ 裁判性别挑人声：含中文 → 中文人声，否则用所选语言人声。
-    private func voice(for text: String) -> AVSpeechSynthesisVoice? {
-        let code = text.containsCJK ? "zh-CN" : language.voiceCode
-        let key = "\(code)|\(umpire.rawValue)"
-        if let cached = voiceCache[key] { return cached }
-        let picked = Self.pickVoice(languageCode: code, umpire: umpire)
-        if let picked { voiceCache[key] = picked }
-        return picked
+    private func voiceForText(_ text: String) -> AVSpeechSynthesisVoice? {
+        let code = text.containsCJKText ? "zh-CN" : language.voiceCode
+        return Self.pickVoice(languageCode: code, umpire: umpire)
     }
 
     /// 从系统人声中挑选：先按性别过滤（无匹配则退回全部），再取音质最高的。
-    static func pickVoice(languageCode: String, umpire: UmpireVoice) -> AVSpeechSynthesisVoice? {
+    nonisolated static func pickVoice(languageCode: String, umpire: UmpireVoice) -> AVSpeechSynthesisVoice? {
         let prefix = String(languageCode.prefix(2))
         let all = AVSpeechSynthesisVoice.speechVoices()
             .filter { $0.language == languageCode || $0.language.hasPrefix(prefix) }
@@ -127,15 +138,12 @@ final class Announcer {
             return e0 < e1
         }
     }
-}
 
-private extension String {
-    /// 是否包含中日韩统一表意文字（用于判断是否需要中文人声）。
-    var containsCJK: Bool {
-        unicodeScalars.contains {
-            (0x4E00...0x9FFF).contains($0.value) ||   // CJK 统一表意
-            (0x3400...0x4DBF).contains($0.value) ||   // 扩展 A
-            (0xF900...0xFAFF).contains($0.value)      // 兼容表意
+    /// 当前语言是否已安装 增强/高级 音质人声（用于提示用户下载更真实的人声）。
+    nonisolated static func hasEnhancedVoice(for language: AnnounceLanguage) -> Bool {
+        let prefix = String(language.voiceCode.prefix(2))
+        return AVSpeechSynthesisVoice.speechVoices().contains {
+            $0.language.hasPrefix(prefix) && ($0.quality == .enhanced || $0.quality == .premium)
         }
     }
 }

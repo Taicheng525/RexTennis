@@ -1,69 +1,84 @@
 import AVFoundation
 
-/// 人群「喊队名加油」合成器（完全离线）。
+/// 人群「喊队名加油」（完全离线）。
 ///
-/// 原理：把队名口号用系统 TTS 渲染成 PCM，再做「人群化」处理——
-/// 男女两个声部 × 三层变调（±音分）+ 错位起声 + 体育场混响，
-/// 全部垫在真实人群欢呼录音之上，听感接近场边人群齐喊，而非机器读名。
-/// 渲染结果按（文本+声部）缓存，比赛开始时预热，点击即放。
-final class ChantSynth: NSObject {
+/// 队名口号经 TTS 渲染后，与真实人群欢呼垫底一起**离线烘焙**成一段成品音频
+/// （多声部变调 + 错位起声 + 体育场混响），运行时用 AVAudioPlayer 播放——
+/// 无实时引擎，从根上杜绝路由变化导致的 disconnected 崩溃。
+/// MainActor 串行化 cache 访问（并发写字典曾导致堆损坏崩溃）。
+@MainActor
+final class ChantSynth {
 
-    private let engine = AVAudioEngine()
-    private var chantPlayers: [AVAudioPlayerNode] = []
-    private var pitchUnits: [AVAudioUnitTimePitch] = []
-    private let bedPlayer = AVAudioPlayerNode()
-    private let reverb = AVAudioUnitReverb()
-
-    /// 渲染缓存：key = "文本|voiceId"
-    private var cache: [String: AVAudioPCMBuffer] = [:]
+    /// 成品混音缓存：key = "队名|语言"
+    private var mixCache: [String: Data] = [:]
+    /// 进行中的烘焙（去重：prewarm 与点击不会重复烘焙同一队名）
+    private var inFlight: [String: Task<Data?, Never>] = [:]
     private var bedBuffer: AVAudioPCMBuffer?
-    private var wired = false
-
-    /// 三层声部的（音分偏移, 变速, 起声延迟秒, 音量）——制造人群参差感
-    private static let layers: [(pitch: Float, rate: Float, delay: Double, gain: Float)] = [
-        (-160, 0.97, 0.00, 0.85),
-        (   0, 1.00, 0.055, 0.95),
-        ( 170, 1.04, 0.12, 0.80),
-    ]
+    private var player: AVAudioPlayer?
 
     // MARK: - 对外接口
 
     /// 为一个队名预热（比赛开始时调用，首次点击零等待）。
     func prewarm(name: String, language: AnnounceLanguage) {
-        Task.detached(priority: .utility) { [weak self] in
-            _ = await self?.renderedChants(name: name, language: language)
+        Task { [weak self] in
+            _ = await self?.mixData(name: name, language: language)
         }
     }
 
     /// 播放「喊 name 加油」。
     func play(name: String, language: AnnounceLanguage) {
-        Task { @MainActor [weak self] in
+        Task { [weak self] in
             guard let self else { return }
-            let chants = await self.renderedChants(name: name, language: language)
-            guard !chants.isEmpty else { return }
-            self.startPlayback(chants: chants)
+            guard let data = await self.mixData(name: name, language: language) else { return }
+            let session = AVAudioSession.sharedInstance()
+            try? session.setCategory(.playback, options: [.duckOthers])
+            try? session.setActive(true)
+            self.player?.stop()
+            self.player = try? AVAudioPlayer(data: data)
+            self.player?.play()
         }
     }
 
     func stop() {
-        guard wired else { return }
-        chantPlayers.forEach { $0.stop() }
-        bedPlayer.stop()
+        player?.stop()
     }
 
-    // MARK: - 渲染
+    // MARK: - 烘焙
 
-    /// 口号文本：中文「XX加油！XX加油！」，英文 "Let's go NAME, let's go!"
+    /// 口号文本：中文「XX，加油！」×2，英文 "Let's go NAME, let's go!"
     private func chantText(name: String, zh: Bool) -> String {
         zh ? "\(name)，加油！\(name)，加油！" : "Let's go \(name), let's go! \(name)! \(name)!"
     }
 
-    /// 渲染男女两个声部的口号 PCM（可用则两个，否则一个）。
-    private func renderedChants(name: String, language: AnnounceLanguage) async -> [AVAudioPCMBuffer] {
+    /// 取（或烘焙）某队的成品混音（去重 + 失败重试一次）。
+    private func mixData(name: String, language: AnnounceLanguage) async -> Data? {
+        let key = "\(name)|\(language.rawValue)"
+        if let hit = mixCache[key] { return hit }
+        if let running = inFlight[key] { return await running.value }
+
+        let task = Task { [weak self] () -> Data? in
+            guard let self else { return nil }
+            var data = await self.bakeMix(name: name, language: language)
+            if data == nil {   // 偶发被会话活动打断：稍候重试一次
+                try? await Task.sleep(nanoseconds: 250_000_000)
+                data = await self.bakeMix(name: name, language: language)
+            }
+            return data
+        }
+        inFlight[key] = task
+        let data = await task.value
+        inFlight[key] = nil
+        if let data { mixCache[key] = data }
+        return data
+    }
+
+    /// 单次烘焙。
+    private func bakeMix(name: String, language: AnnounceLanguage) async -> Data? {
         let zh = name.containsCJKText || language == .chinese
         let text = chantText(name: name, zh: zh)
         let code = name.containsCJKText ? "zh-CN" : language.voiceCode
 
+        // 男女两个声部（可用则两个）
         var voices: [AVSpeechSynthesisVoice] = []
         for gender in [UmpireVoice.female, .male] {
             if let v = Announcer.pickVoice(languageCode: code, umpire: gender),
@@ -71,210 +86,38 @@ final class ChantSynth: NSObject {
                 voices.append(v)
             }
         }
-        guard !voices.isEmpty else { return [] }
+        guard !voices.isEmpty else { return nil }
 
-        var result: [AVAudioPCMBuffer] = []
+        var chants: [AVAudioPCMBuffer] = []
         for voice in voices {
-            let key = "\(text)|\(voice.identifier)"
-            if let hit = cache[key] {
-                result.append(hit)
-            } else if let rendered = await Self.renderTTS(text: text, voice: voice),
-                      let standard = Self.convertToStandard(rendered) {
-                // 转成标准 Float32/44.1kHz——TTS 原始格式(Int16/22kHz)接变调/混响会
-                // 让引擎初始化失败(-10868 格式不支持)
-                cache[key] = standard
-                result.append(standard)
+            if let rendered = await TTSRender.render(text: text, voice: voice,
+                                                     rate: AVSpeechUtteranceDefaultSpeechRate * 1.02,
+                                                     pitch: 1.12) {
+                chants.append(rendered)
             }
         }
-        return result
+        guard !chants.isEmpty else { return nil }
+
+        loadBedIfNeeded()
+        let bed = bedBuffer
+        return await Task.detached(priority: .userInitiated) {
+            OfflineFX.bakeCrowdChant(chants: chants, bed: bed)
+        }.value
     }
 
-    /// 引擎图统一使用的标准格式。
-    private static let standardFormat = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
-
-    /// 把任意 PCM buffer 转换为标准 Float32/44.1kHz 单声道。
-    private static func convertToStandard(_ src: AVAudioPCMBuffer) -> AVAudioPCMBuffer? {
-        guard src.frameLength > 0 else { return nil }
-        if src.format == standardFormat { return src }
-        guard let converter = AVAudioConverter(from: src.format, to: standardFormat) else { return nil }
-        let ratio = standardFormat.sampleRate / src.format.sampleRate
-        let capacity = AVAudioFrameCount(Double(src.frameLength) * ratio) + 4096
-        guard let out = AVAudioPCMBuffer(pcmFormat: standardFormat, frameCapacity: capacity) else { return nil }
-        var fed = false
-        var err: NSError?
-        converter.convert(to: out, error: &err) { _, status in
-            if fed { status.pointee = .endOfStream; return nil }
-            fed = true
-            status.pointee = .haveData
-            return src
-        }
-        return (err == nil && out.frameLength > 0) ? out : nil
-    }
-
-    /// 渲染期间保活的 synthesizer（write 回调是异步的，局部变量会被提前释放）。
-    private static var activeSynths: [ObjectIdentifier: AVSpeechSynthesizer] = [:]
-    private static let synthLock = NSLock()
-
-    /// 把一段文本用指定 voice 渲染为单个 PCM buffer。
-    private static func renderTTS(text: String, voice: AVSpeechSynthesisVoice) async -> AVAudioPCMBuffer? {
-        let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = voice
-        utterance.rate = AVSpeechUtteranceDefaultSpeechRate * 1.02   // 口号節奏稍快
-        utterance.pitchMultiplier = 1.12                              // 更亢奋
-        let synth = AVSpeechSynthesizer()
-        synthLock.lock(); activeSynths[ObjectIdentifier(synth)] = synth; synthLock.unlock()
-
-        return await withCheckedContinuation { continuation in
-            var chunks: [AVAudioPCMBuffer] = []
-            var finished = false
-            func finish() {
-                guard !finished else { return }
-                finished = true
-                synthLock.lock(); activeSynths[ObjectIdentifier(synth)] = nil; synthLock.unlock()
-                continuation.resume(returning: Self.concat(chunks))
-            }
-            synth.write(utterance) { buffer in
-                guard let pcm = buffer as? AVAudioPCMBuffer else { return }
-                if pcm.frameLength == 0 {
-                    finish()
-                } else if let copy = Self.copyBuffer(pcm) {
-                    chunks.append(copy)
-                }
-            }
-            // 兜底：极端情况下没有零长度结尾包
-            DispatchQueue.global().asyncAfter(deadline: .now() + 15) { finish() }
-        }
-    }
-
-    private static func copyBuffer(_ src: AVAudioPCMBuffer) -> AVAudioPCMBuffer? {
-        guard let dst = AVAudioPCMBuffer(pcmFormat: src.format, frameCapacity: src.frameLength) else { return nil }
-        dst.frameLength = src.frameLength
-        let bytes = Int(src.frameLength) * Int(src.format.streamDescription.pointee.mBytesPerFrame)
-        if let s = src.audioBufferList.pointee.mBuffers.mData,
-           let d = dst.audioBufferList.pointee.mBuffers.mData {
-            memcpy(d, s, bytes)
-        }
-        return dst
-    }
-
-    private static func concat(_ chunks: [AVAudioPCMBuffer]) -> AVAudioPCMBuffer? {
-        guard let first = chunks.first else { return nil }
-        let total = chunks.reduce(0) { $0 + $1.frameLength }
-        guard let out = AVAudioPCMBuffer(pcmFormat: first.format, frameCapacity: total) else { return nil }
-        for c in chunks {
-            let bytes = Int(c.frameLength) * Int(c.format.streamDescription.pointee.mBytesPerFrame)
-            if let s = c.audioBufferList.pointee.mBuffers.mData,
-               let d = out.audioBufferList.pointee.mBuffers.mData {
-                memcpy(d.advanced(by: Int(out.frameLength) * Int(out.format.streamDescription.pointee.mBytesPerFrame)), s, bytes)
-            }
-            out.frameLength += c.frameLength
-        }
-        return out
-    }
-
-    // MARK: - 播放（人群化处理）
-
-    private func wireIfNeeded() {
-        guard !wired else { return }
-        let format = Self.standardFormat
-
-        // 人群欢呼垫底（读入后同样转成标准格式，保证全图格式一致）
-        engine.attach(bedPlayer)
-        engine.connect(bedPlayer, to: engine.mainMixerNode, format: format)
-        if let url = Bundle.main.url(forResource: "cheer", withExtension: "m4a"),
-           let file = try? AVAudioFile(forReading: url),
-           let raw = AVAudioPCMBuffer(pcmFormat: file.processingFormat,
-                                      frameCapacity: AVAudioFrameCount(file.length)) {
-            try? file.read(into: raw)
-            bedBuffer = Self.convertToStandard(raw)
-        }
-
-        // 六个口号声部（2 voice × 3 层）走 变调 → 体育场混响
-        engine.attach(reverb)
-        reverb.loadFactoryPreset(.largeHall2)
-        reverb.wetDryMix = 52
-        engine.connect(reverb, to: engine.mainMixerNode, format: format)
-
-        for _ in 0..<6 {
-            let player = AVAudioPlayerNode()
-            let pitch = AVAudioUnitTimePitch()
-            engine.attach(player)
-            engine.attach(pitch)
-            engine.connect(player, to: pitch, format: format)
-            engine.connect(pitch, to: reverb, format: format)
-            chantPlayers.append(player)
-            pitchUnits.append(pitch)
-        }
-        wired = true
-    }
-
-    private func startPlayback(chants: [AVAudioPCMBuffer]) {
-        let session = AVAudioSession.sharedInstance()
-        try? session.setCategory(.playback, options: [.duckOthers])
-        try? session.setActive(true)
-
-        wireIfNeeded()
-        // 先确保引擎跑起来，再调度播放
-        if !engine.isRunning {
-            engine.prepare()
-            do { try engine.start() } catch { return }
-        }
-        stopNodesOnly()
-
-        // 垫底人群声（稍低音量）
-        if let bed = bedBuffer, bed.frameLength > 0 {
-            bedPlayer.volume = 0.75
-            bedPlayer.scheduleBuffer(bed, at: nil, options: .interrupts, completionHandler: nil)
-            bedPlayer.play()
-        }
-
-        // 口号声部：每个 voice × 3 层，错位起声 + 变调
-        let sr = Self.standardFormat.sampleRate
-        var index = 0
-        for chant in chants.prefix(2) where chant.frameLength > 0 {
-            for layer in Self.layers {
-                guard index < chantPlayers.count else { break }
-                let player = chantPlayers[index]
-                let pitch = pitchUnits[index]
-                pitch.pitch = layer.pitch + Float.random(in: -25...25)
-                pitch.rate = layer.rate
-                player.volume = layer.gain * 0.62   // 融进人群，不能盖过垫底声
-
-                // 前置静音实现错位起声（人群从 0.35s 处进）
-                let delaySec = 0.35 + layer.delay + Double(index % 2) * 0.03
-                if let padded = Self.padded(chant, leadingSeconds: delaySec, sampleRate: sr) {
-                    player.scheduleBuffer(padded, at: nil, options: .interrupts, completionHandler: nil)
-                    player.play()
-                }
-                index += 1
-            }
-        }
-    }
-
-    private func stopNodesOnly() {
-        chantPlayers.forEach { $0.stop() }
-        bedPlayer.stop()
-    }
-
-    /// 在 buffer 前补 leadingSeconds 的静音。
-    private static func padded(_ src: AVAudioPCMBuffer, leadingSeconds: Double, sampleRate: Double) -> AVAudioPCMBuffer? {
-        let lead = AVAudioFrameCount(leadingSeconds * sampleRate)
-        let total = lead + src.frameLength
-        guard let out = AVAudioPCMBuffer(pcmFormat: src.format, frameCapacity: total) else { return nil }
-        out.frameLength = total
-        let bpf = Int(src.format.streamDescription.pointee.mBytesPerFrame)
-        if let d = out.audioBufferList.pointee.mBuffers.mData {
-            memset(d, 0, Int(total) * bpf)
-            if let s = src.audioBufferList.pointee.mBuffers.mData {
-                memcpy(d.advanced(by: Int(lead) * bpf), s, Int(src.frameLength) * bpf)
-            }
-        }
-        return out
+    private func loadBedIfNeeded() {
+        guard bedBuffer == nil,
+              let url = Bundle.main.url(forResource: "cheer", withExtension: "m4a"),
+              let file = try? AVAudioFile(forReading: url),
+              let raw = AVAudioPCMBuffer(pcmFormat: file.processingFormat,
+                                         frameCapacity: AVAudioFrameCount(file.length)) else { return }
+        try? file.read(into: raw)
+        bedBuffer = TTSRender.convertToStandard(raw)
     }
 }
 
 extension String {
-    /// 是否包含中日韩表意文字（与 Announcer 中判定一致，供口号选择语音）。
+    /// 是否包含中日韩表意文字（供口号/播报选择语音）。
     var containsCJKText: Bool {
         unicodeScalars.contains {
             (0x4E00...0x9FFF).contains($0.value) ||
