@@ -57,18 +57,29 @@ struct MatchView: View {
 
             Spacer()
 
-            Button {
-                viewModel.language = isChinese ? .english : .chinese
-            } label: {
-                Text(isChinese ? "中" : "EN")
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(RexTheme.text)
-                    .frame(width: 40, height: 30)
-                    .background(RexTheme.card, in: Capsule())
-                    .overlay(Capsule().strokeBorder(RexTheme.hairline, lineWidth: 1))
+            HStack(spacing: 8) {
+                // 裁判声音切换：女(♀) / 男(♂)
+                pillButton(viewModel.umpire == .female ? "♀" : "♂") {
+                    viewModel.umpire = viewModel.umpire == .female ? .male : .female
+                }
+                // 语言切换：中 / EN
+                pillButton(isChinese ? "中" : "EN") {
+                    viewModel.language = isChinese ? .english : .chinese
+                }
             }
-            .buttonStyle(.plain)
         }
+    }
+
+    private func pillButton(_ label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(RexTheme.text)
+                .frame(width: 40, height: 30)
+                .background(RexTheme.card, in: Capsule())
+                .overlay(Capsule().strokeBorder(RexTheme.hairline, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
     }
 
     private var phaseTitle: String {
@@ -155,9 +166,10 @@ struct MatchView: View {
     @ViewBuilder
     private var statusHint: some View {
         if viewModel.isFinished, let winner = state.winner {
-            VStack(spacing: 4) {
-                Text("🏆")
-                    .font(.system(size: 34))
+            VStack(spacing: 6) {
+                Image(systemName: "trophy.fill")
+                    .font(.system(size: 30))
+                    .foregroundStyle(RexTheme.accent)
                 Text(isChinese
                      ? "\(state.config.name(for: winner)) 胜 · \(state.games(for: winner)) : \(state.games(for: winner.other))"
                      : "\(state.config.name(for: winner)) wins · \(state.games(for: winner)) : \(state.games(for: winner.other))")
@@ -166,14 +178,15 @@ struct MatchView: View {
             }
             .multilineTextAlignment(.center)
         } else if viewModel.showChangeEnds {
-            Label(isChinese ? "换边" : "CHANGE ENDS", systemImage: "arrow.left.arrow.right")
-                .font(.system(size: 13, weight: .heavy, design: .serif))
-                .tracking(1.5)
-                .foregroundStyle(RexTheme.text)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(RexTheme.card, in: Capsule())
-                .overlay(Capsule().strokeBorder(RexTheme.accent.opacity(0.8), lineWidth: 1.5))
+            // 纯文字提醒（非按钮）
+            HStack(spacing: 7) {
+                Image(systemName: "arrow.left.arrow.right")
+                Text(isChinese ? "换边" : "CHANGE ENDS")
+                    .tracking(1.5)
+            }
+            .font(.system(size: 14, weight: .heavy, design: .serif))
+            .foregroundStyle(RexTheme.accent)
+            .padding(.vertical, 8)
         } else if state.isDeuce {
             Text(isChinese ? "平分 · 金球" : "DEUCE · DECIDING POINT")
                 .font(.system(size: 13, weight: .heavy, design: .serif))

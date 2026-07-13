@@ -49,13 +49,12 @@ final class MatchViewModel: ObservableObject {
         announcer.speak(text)
     }
 
-    /// 撤销上一步得分。
+    /// 撤销上一步得分（静默，不播报）。
     func undo() {
         guard let previous = history.popLast() else { return }
         announcer.stop()
         state = previous
         showChangeEnds = false
-        announcer.speak(builder.undoText(language))
     }
 
     /// 播报当前比分（供手动「再报一次」按钮使用）。
