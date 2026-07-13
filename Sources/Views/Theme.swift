@@ -112,7 +112,7 @@ struct TennisBall: View {
     }
 }
 
-/// 网球接缝：左右中线两端出发，一条鼓向上极、一条鼓向下极，形成经典纺锤接缝。
+/// 网球接缝：从顶到底的 S 形波浪曲线，把球面分成两片水滴——真实网球正面外观。
 private struct TennisSeam: Shape {
     func path(in rect: CGRect) -> Path {
         let w = rect.width, h = rect.height
@@ -120,10 +120,10 @@ private struct TennisSeam: Shape {
             CGPoint(x: rect.minX + w * x, y: rect.minY + h * y)
         }
         var path = Path()
-        path.move(to: pt(0.12, 0.50))
-        path.addQuadCurve(to: pt(0.88, 0.50), control: pt(0.50, -0.20))   // 上弧
-        path.move(to: pt(0.12, 0.50))
-        path.addQuadCurve(to: pt(0.88, 0.50), control: pt(0.50, 1.20))    // 下弧
+        // 两段在中点平滑衔接（切线同向）→ 标准 S
+        path.move(to: pt(0.50, 0.05))
+        path.addQuadCurve(to: pt(0.50, 0.50), control: pt(0.06, 0.27))   // 上半：左凸
+        path.addQuadCurve(to: pt(0.50, 0.95), control: pt(0.94, 0.73))   // 下半：右凸
         return path
     }
 }
