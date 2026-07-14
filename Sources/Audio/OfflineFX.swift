@@ -112,7 +112,7 @@ enum OfflineFX {
 
         let voiceDur = Double(voice.frameLength) / format.sampleRate
         let padded = TTSRender.padded(voice, leadingSeconds: 0.08) ?? voice   // 抬麦停顿
-        let totalDur = voiceDur + 1.5
+        let totalDur = voiceDur + 2.6   // 报分念完后背景音继续飘一会儿再缓慢消失
 
         // 现场人群底噪：真实球场氛围垫底，让报分不像"空房间里说话"。
         // 音量压得很低——底噪一响就露馅，宁可若有若无。循环 + 淡入淡出铺满整段。
@@ -162,7 +162,8 @@ enum OfflineFX {
         return head
     }
 
-    /// 把底噪循环铺满 `seconds`，首尾各 0.4s 淡入淡出（避免突兀起止）。
+    /// 把底噪循环铺满 `seconds`：起始 0.5s 淡入，结尾 **2.0s 缓慢淡出**（平方曲线），
+    /// 让背景音在报分念完后继续飘一会儿、逐渐消失，不与人声一起戛然而止。
     private static func loopedFaded(_ src: AVAudioPCMBuffer, seconds: Double) -> AVAudioPCMBuffer? {
         let format = src.format
         let total = AVAudioFrameCount(seconds * format.sampleRate)
@@ -177,15 +178,15 @@ enum OfflineFX {
             let s = sData[c], d = dData[c]
             for i in 0..<n { d[i] = s[i % srcLen] }   // 循环填充
         }
-        let fade = min(Int(0.4 * format.sampleRate), n / 2)
-        if fade > 0 {
-            for c in 0..<ch {
-                let d = dData[c]
-                for i in 0..<fade {
-                    let g = Float(i) / Float(fade)
-                    d[i] *= g
-                    d[n - 1 - i] *= g
-                }
+        let sr = format.sampleRate
+        let fadeIn = min(Int(0.5 * sr), n / 2)
+        let fadeOut = min(Int(2.0 * sr), n / 2)
+        for c in 0..<ch {
+            let d = dData[c]
+            for i in 0..<fadeIn { d[i] *= Float(i) / Float(fadeIn) }
+            for i in 0..<fadeOut {
+                let g = Float(i) / Float(fadeOut)
+                d[n - 1 - i] *= g * g   // 平方曲线：尾部收得更缓、更自然
             }
         }
         return out

@@ -29,13 +29,10 @@ final class SoundEffects {
         }
     }
 
-    /// 播放指定音效（打断其他音效，避免叠加过响；不打断语音播报）。
+    /// 播放指定音效。多个音效可**同时叠加**播放、互不打断
+    /// （现场掌声/欢呼/叹息本就会重叠）；不打断语音播报。
     func play(_ kind: Kind) {
         ensureSession()
-        for (k, p) in players where k != kind && p.isPlaying {
-            p.stop()
-            p.currentTime = 0
-        }
         guard let player = players[kind] else { return }
         player.currentTime = 0
         player.play()
