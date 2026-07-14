@@ -1,9 +1,9 @@
 import SwiftUI
 
 /// 赛前设置。两张卡：
-/// - 「对阵」：先选单打/双打；每队一个「队名（选填）」＋对应数量的队员名框。
-/// - 「比赛设置」：赛制 / 首发（按队名或我方对方选）/ 播报语言 / 裁判声音，均带标签。
-/// 队名与队员名相互独立、都可留空——只填队员名也能开赛。
+/// - 「对阵」：单打/双打；每队可选加「队名」＋队员名。名字框右侧下拉可从已存名单快速选。
+/// - 「比赛设置」：赛制 / 首发 / 播报语言 / 裁判声音，均带标签。
+/// 队名与队员名相互独立、都可留空。开赛时把填过的名字记入名单，下次直接选。
 struct SetupView: View {
     @EnvironmentObject private var appModel: AppModel
 
@@ -18,6 +18,8 @@ struct SetupView: View {
     @State private var me2: String = SettingsStore.playersMe.count > 1 ? SettingsStore.playersMe[1] : ""
     @State private var opp1: String = SettingsStore.playersOpp.first ?? ""
     @State private var opp2: String = SettingsStore.playersOpp.count > 1 ? SettingsStore.playersOpp[1] : ""
+    @State private var playerRoster: [String] = SettingsStore.playerRoster
+    @State private var teamRoster: [String] = SettingsStore.teamRoster
 
     private enum Field: Hashable { case teamMe, me1, me2, teamOpp, opp1, opp2 }
     @FocusState private var focused: Field?
@@ -25,20 +27,23 @@ struct SetupView: View {
     private var isChinese: Bool { appModel.language == .chinese }
 
     private func trimmed(_ s: String) -> String { s.trimmingCharacters(in: .whitespaces) }
+    private func teamDefault(_ side: Side) -> String {
+        side == .me ? (isChinese ? "队伍 1" : "Team 1") : (isChinese ? "队伍 2" : "Team 2")
+    }
 
     private var resolvedPlayersMe: [String] {
         var a = [trimmed(me1)]; if isDoubles { a.append(trimmed(me2)) }
         let f = a.filter { !$0.isEmpty }
-        return f.isEmpty ? [isChinese ? "我方" : "You"] : f
+        return f.isEmpty ? [teamDefault(.me)] : f
     }
     private var resolvedPlayersOpp: [String] {
         var a = [trimmed(opp1)]; if isDoubles { a.append(trimmed(opp2)) }
         let f = a.filter { !$0.isEmpty }
-        return f.isEmpty ? [isChinese ? "对方" : "Opponent"] : f
+        return f.isEmpty ? [teamDefault(.opponent)] : f
     }
-    /// 首发选择器上的短标识：有队名用队名，否则「我方 / 对方」（不堆队员名）。
-    private var labelMe: String { trimmed(teamMe).isEmpty ? (isChinese ? "我方" : "You") : trimmed(teamMe) }
-    private var labelOpp: String { trimmed(teamOpp).isEmpty ? (isChinese ? "对方" : "Opponent") : trimmed(teamOpp) }
+    /// 首发选择器上的短标识：有队名用队名，否则中立的「队伍 1 / 队伍 2」。
+    private var labelMe: String { trimmed(teamMe).isEmpty ? teamDefault(.me) : trimmed(teamMe) }
+    private var labelOpp: String { trimmed(teamOpp).isEmpty ? teamDefault(.opponent) : trimmed(teamOpp) }
 
     var body: some View {
         ZStack {
@@ -58,11 +63,11 @@ struct SetupView: View {
                         }
                         .pickerStyle(.segmented)
 
-                        teamSection(isChinese ? "我方" : "YOUR SIDE",
+                        teamSection(isChinese ? "队伍 1" : "TEAM 1",
                                     team: $teamMe, showTeam: $showTeamMe, p1: $me1, p2: $me2,
                                     tf: .teamMe, f1: .me1, f2: .me2)
                         Rectangle().fill(RexTheme.hairline).frame(height: 1)
-                        teamSection(isChinese ? "对方" : "OPPONENT",
+                        teamSection(isChinese ? "队伍 2" : "TEAM 2",
                                     team: $teamOpp, showTeam: $showTeamOpp, p1: $opp1, p2: $opp2,
                                     tf: .teamOpp, f1: .opp1, f2: .opp2)
                     }
@@ -125,7 +130,7 @@ struct SetupView: View {
         }
     }
 
-    // MARK: - 一队的输入：队名（选填）+ 队员名（单打 1 / 双打 2）
+    // MARK: - 一队的输入：队名（可选）+ 队员名（单打 1 / 双打 2）
 
     private func teamSection(_ title: String, team: Binding<String>, showTeam: Binding<Bool>,
                              p1: Binding<String>, p2: Binding<String>,
@@ -150,7 +155,7 @@ struct SetupView: View {
             }
             if showTeam.wrappedValue {
                 HStack(spacing: 8) {
-                    nameField(isChinese ? "队名" : "Team name", text: team, field: tf)
+                    nameField(isChinese ? "队名" : "Team name", text: team, field: tf, roster: teamRoster)
                     Button {
                         showTeam.wrappedValue = false
                         team.wrappedValue = ""
@@ -163,31 +168,46 @@ struct SetupView: View {
                 }
             }
             if isDoubles {
-                nameField(isChinese ? "队员 1" : "Player 1", text: p1, field: f1)
-                nameField(isChinese ? "队员 2" : "Player 2", text: p2, field: f2)
+                nameField(isChinese ? "队员 1" : "Player 1", text: p1, field: f1, roster: playerRoster)
+                nameField(isChinese ? "队员 2" : "Player 2", text: p2, field: f2, roster: playerRoster)
             } else {
-                nameField(isChinese ? "队员姓名" : "Player name", text: p1, field: f1)
+                nameField(isChinese ? "队员姓名" : "Player name", text: p1, field: f1, roster: playerRoster)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func nameField(_ placeholder: String, text: Binding<String>, field: Field) -> some View {
-        TextField("", text: text,
-                  prompt: Text(placeholder).foregroundStyle(RexTheme.textFaint))
-            .foregroundStyle(RexTheme.text)
-            .font(.body.weight(.medium))
-            .focused($focused, equals: field)
-            .submitLabel(.done)
-            .autocorrectionDisabled()
-            .padding(.horizontal, 14)
-            .padding(.vertical, 11)
-            .background(.black.opacity(0.30), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(focused == field ? RexTheme.accent.opacity(0.7) : RexTheme.hairline,
-                                  lineWidth: 1)
-            )
+    /// 输入框 + 右侧「从名单选」下拉（名单为空时不显示下拉）。
+    private func nameField(_ placeholder: String, text: Binding<String>,
+                           field: Field, roster: [String]) -> some View {
+        HStack(spacing: 6) {
+            TextField("", text: text,
+                      prompt: Text(placeholder).foregroundStyle(RexTheme.textFaint))
+                .foregroundStyle(RexTheme.text)
+                .font(.body.weight(.medium))
+                .focused($focused, equals: field)
+                .submitLabel(.done)
+                .autocorrectionDisabled()
+            if !roster.isEmpty {
+                Menu {
+                    ForEach(roster, id: \.self) { name in
+                        Button(name) { text.wrappedValue = name; focused = nil }
+                    }
+                } label: {
+                    Image(systemName: "chevron.down.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(RexTheme.accent.opacity(0.8))
+                }
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+        .background(.black.opacity(0.30), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(focused == field ? RexTheme.accent.opacity(0.7) : RexTheme.hairline,
+                              lineWidth: 1)
+        )
     }
 
     // MARK: - 卡片 & 设置行（标签在上、控件在下，不换行）
@@ -228,6 +248,9 @@ struct SetupView: View {
             SettingsStore.teamNameOpp = trimmed(teamOpp)
             SettingsStore.playersMe = resolvedPlayersMe
             SettingsStore.playersOpp = resolvedPlayersOpp
+            // 记住实际填写过的名字（不含默认占位），供下次直接选择
+            SettingsStore.remember(players: [me1, me2, opp1, opp2].map(trimmed).filter { !$0.isEmpty })
+            SettingsStore.remember(teams: [teamMe, teamOpp].map(trimmed).filter { !$0.isEmpty })
             appModel.startMatch(config: MatchConfig(targetGames: targetGames,
                                                     firstServer: firstServer,
                                                     teamNameMe: trimmed(teamMe),

@@ -9,6 +9,8 @@ enum SettingsStore {
     private static let teamNameMeKey = "rex.teamNameMe"
     private static let teamNameOppKey = "rex.teamNameOpp"
     private static let doublesKey = "rex.isDoubles"
+    private static let playerRosterKey = "rex.playerRoster"
+    private static let teamRosterKey = "rex.teamRoster"
 
     static var language: AnnounceLanguage {
         get {
@@ -51,5 +53,30 @@ enum SettingsStore {
     static var isDoubles: Bool {
         get { UserDefaults.standard.bool(forKey: doublesKey) }
         set { UserDefaults.standard.set(newValue, forKey: doublesKey) }
+    }
+
+    // MARK: - 名单（预存队员名 / 队名，下次可直接选择）
+
+    static var playerRoster: [String] {
+        get { UserDefaults.standard.stringArray(forKey: playerRosterKey) ?? [] }
+        set { UserDefaults.standard.set(newValue, forKey: playerRosterKey) }
+    }
+    static var teamRoster: [String] {
+        get { UserDefaults.standard.stringArray(forKey: teamRosterKey) ?? [] }
+        set { UserDefaults.standard.set(newValue, forKey: teamRosterKey) }
+    }
+
+    /// 记住用到的队员名（去重、最近在前、上限 40），供下次直接选择。
+    static func remember(players: [String]) { playerRoster = merged(players, into: playerRoster) }
+    /// 记住用到的队名。
+    static func remember(teams: [String]) { teamRoster = merged(teams, into: teamRoster) }
+
+    private static func merged(_ new: [String], into list: [String]) -> [String] {
+        var r = list
+        for n in new.reversed() where !n.isEmpty {
+            r.removeAll { $0 == n }
+            r.insert(n, at: 0)
+        }
+        return Array(r.prefix(40))
     }
 }
