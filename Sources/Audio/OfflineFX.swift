@@ -93,14 +93,15 @@ enum OfflineFX {
         let echo = AVAudioUnitDelay()
         let reverb = AVAudioUnitReverb()
 
-        // 体育场 PA 麦克风感：明显但不盖住人声的短回声 + 大空间混响
+        // 体育场 PA 麦克风感：适度短回声 + 空间混响（真正的现场感靠人群底噪补足，
+        // 混响过重反而像空房间）
         echo.delayTime = 0.14          // 短前反射：喇叭扩声感
-        echo.feedback = 24             // 多次反射，像大看台空间
-        echo.wetDryMix = 17            // 回声清晰可闻
+        echo.feedback = 15             // 反射次数适中
+        echo.wetDryMix = 11            // 回声隐约可闻，不过重
         echo.lowPassCutoff = 3400      // 回声尾略闷，像远处看台反射
 
-        reverb.loadFactoryPreset(.largeHall)   // 大厅≈体育场，比 largeRoom 更空旷
-        reverb.wetDryMix = 22          // 明显的现场空间混响
+        reverb.loadFactoryPreset(.largeHall)   // 大厅≈体育场空间
+        reverb.wetDryMix = 15          // 空间感适中
 
         engine.attach(player)
         engine.attach(echo)
@@ -112,7 +113,7 @@ enum OfflineFX {
         let voiceDur = Double(voice.frameLength) / format.sampleRate
         let padded = TTSRender.padded(voice, leadingSeconds: 0.08) ?? voice   // 抬麦停顿
 
-        return renderOffline(engine: engine, duration: voiceDur + 1.7) {
+        return renderOffline(engine: engine, duration: voiceDur + 1.5) {
             player.scheduleBuffer(padded, at: nil, options: [], completionHandler: nil)
             player.play()
         }
