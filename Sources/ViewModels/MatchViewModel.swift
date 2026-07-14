@@ -78,7 +78,7 @@ final class MatchViewModel: ObservableObject {
     /// 手动播报一句裁判喊话（安静/出界/擦网重发），用整场同一个裁判声线。
     func umpireCall(_ call: AnnouncementBuilder.UmpireCall) {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        announcer.speak(builder.umpireCall(call, language: language))
+        announcer.speak(builder.umpireCall(call, language: language), emphatic: true)
     }
 
     /// 一键静音：立即停掉正在播的语音与所有音效。

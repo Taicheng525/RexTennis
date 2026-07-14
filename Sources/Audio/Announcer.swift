@@ -13,6 +13,7 @@ final class Announcer {
 
     private var sessionConfigured = false
     private var pendingText: String?
+    private var pendingEmphatic = false
     private var pendingWork: DispatchWorkItem?
     private var playTask: Task<Void, Never>?
     private var player: AVAudioPlayer?
@@ -27,12 +28,13 @@ final class Announcer {
     // MARK: - 对外接口
 
     /// 朗读一句文案。连续调用只会播报最后一条。
-    func speak(_ text: String) {
+    func speak(_ text: String, emphatic: Bool = false) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         configureSessionIfNeeded()
 
         pendingText = trimmed
+        pendingEmphatic = emphatic
         pendingWork?.cancel()
         playTask?.cancel()
         player?.stop()   // 打断上一条（连点场景）
@@ -58,6 +60,8 @@ final class Announcer {
     private func flushPending() {
         guard let text = pendingText else { return }
         pendingText = nil
+        let emphatic = pendingEmphatic
+        pendingEmphatic = false
 
         playTask = Task { [weak self] in
             guard let self else { return }
@@ -65,12 +69,12 @@ final class Announcer {
             // 英文播报里若出现中文（队名），队名那几个字用中文嗓念出，其余保持英音
             let needsMix = self.language != .chinese && text.containsCJKText
             let cjkVoice = needsMix ? Self.pickVoice(languageCode: "zh-CN", umpire: self.umpire) : nil
-            let key = "\(text)|\(voice.identifier)|\(cjkVoice?.identifier ?? "-")"
+            let key = "\(text)|\(voice.identifier)|\(cjkVoice?.identifier ?? "-")|\(emphatic)"
             var data = self.cache[key]
             if data == nil {
-                // 保持自然音高与接近正常的语速——改音高会让系统人声发音失真、
-                // 听感机械（中文尤甚）
-                let rate = AVSpeechUtteranceDefaultSpeechRate * 0.94
+                // 裁判喊话(emphatic)放慢语速，让 "Out" 这类短词收音完整、更有喊话的分量；
+                // 常规报分保持接近自然的语速。改音高会让人声失真，故只改语速。
+                let rate = AVSpeechUtteranceDefaultSpeechRate * (emphatic ? 0.80 : 0.94)
                 let buffer: AVAudioPCMBuffer?
                 if needsMix, let cjkVoice {
                     buffer = await TTSRender.renderMixed(text: text, primaryVoice: voice,
