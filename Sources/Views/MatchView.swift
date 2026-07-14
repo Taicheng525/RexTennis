@@ -17,7 +17,7 @@ struct MatchView: View {
                 Spacer(minLength: 0)
                 scoreboard
                 statusHint
-                cheerBar
+                soundBoard
                 Spacer(minLength: 0)
                 if viewModel.isFinished {
                     finishedControls
@@ -205,15 +205,73 @@ struct MatchView: View {
 
     // MARK: - 欢呼音效
 
-    private var cheerBar: some View {
-        HStack(spacing: 8) {
-            cheerButton("hands.clap.fill", .applause)
-            cheerButton("music.mic", .cheer)
-            cheerButton("party.popper.fill", .bigcheer)
-            cheerButton("person.3.fill", .cheers)
-            cheerButton("hand.thumbsdown.fill", .groan)
+    private var soundBoard: some View {
+        VStack(spacing: 7) {
+            categoryHeader(isChinese ? "观众" : "CROWD")
+            HStack(spacing: 6) {
+                cheerButton("hands.clap.fill", .applause)
+                cheerButton("music.mic", .cheer)
+                cheerButton("party.popper.fill", .bigcheer)
+                cheerButton("person.3.fill", .cheers)
+                cheerButton("hand.thumbsdown.fill", .groan)
+            }
+            categoryHeader(isChinese ? "裁判" : "UMPIRE")
+            HStack(spacing: 6) {
+                callButton("hand.raised.fill", .quiet)
+                callButton("xmark.circle.fill", .out)
+                callButton("1.circle.fill", .letFirst)
+                callButton("2.circle.fill", .letSecond)
+                silenceButton
+            }
         }
-        .padding(.top, 6)
+        .padding(.top, 4)
+    }
+
+    /// 分类小标题
+    private func categoryHeader(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 10, weight: .bold, design: .serif))
+            .tracking(1.5)
+            .foregroundStyle(RexTheme.textFaint)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// 一键静音：立即停掉语音 + 所有音效
+    private var silenceButton: some View {
+        Button {
+            viewModel.silenceAll()
+        } label: {
+            Image(systemName: "speaker.slash.fill")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(.red.opacity(0.9))
+                .frame(maxWidth: .infinity)
+                .frame(height: 46)
+                .background(RexTheme.card, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .strokeBorder(.red.opacity(0.35), lineWidth: 1)
+                )
+        }
+        .buttonStyle(PressableButtonStyle())
+    }
+
+    /// 裁判喊话按钮（TTS 生成，与报分同一裁判声线）
+    private func callButton(_ icon: String, _ call: AnnouncementBuilder.UmpireCall) -> some View {
+        Button {
+            viewModel.umpireCall(call)
+        } label: {
+            Image(systemName: icon)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(RexTheme.accent)
+                .frame(maxWidth: .infinity)
+                .frame(height: 46)
+                .background(RexTheme.card, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .strokeBorder(RexTheme.hairline, lineWidth: 1)
+                )
+        }
+        .buttonStyle(PressableButtonStyle())
     }
 
     private func cheerButton(_ icon: String, _ kind: SoundEffects.Kind) -> some View {

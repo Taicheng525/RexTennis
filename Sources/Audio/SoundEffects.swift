@@ -38,6 +38,14 @@ final class SoundEffects {
         player.play()
     }
 
+    /// 立即停掉所有正在播放的音效（配合「全部静音」）。
+    func stopAll() {
+        for (_, p) in players where p.isPlaying {
+            p.stop()
+            p.currentTime = 0
+        }
+    }
+
     private func ensureSession() {
         let session = AVAudioSession.sharedInstance()
         try? session.setCategory(.playback, mode: .default, options: [.duckOthers])

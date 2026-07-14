@@ -20,6 +20,22 @@ struct AnnouncementBuilder {
         language == .chinese ? "已撤销" : "Undo"
     }
 
+    /// 手动触发的裁判喊话（非计分事件），走和报分同一个裁判声线播报。
+    enum UmpireCall: String, CaseIterable, Identifiable {
+        case quiet, out, letFirst, letSecond
+        var id: String { rawValue }
+    }
+
+    func umpireCall(_ call: UmpireCall, language: AnnounceLanguage) -> String {
+        let zh = language == .chinese
+        switch call {
+        case .quiet:     return zh ? "请保持安静" : "Quiet, please"
+        case .out:       return zh ? "出界"       : "Out"
+        case .letFirst:  return zh ? "擦网，重发一发" : "Let. First service"
+        case .letSecond: return zh ? "擦网，重发二发" : "Let. Second service"
+        }
+    }
+
     // MARK: - 单事件文案
 
     private func phrase(for event: MatchEvent, state s: MatchState, language lang: AnnounceLanguage) -> String? {

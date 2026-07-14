@@ -75,6 +75,19 @@ final class MatchViewModel: ObservableObject {
         soundEffects.play(kind)
     }
 
+    /// 手动播报一句裁判喊话（安静/出界/擦网重发），用整场同一个裁判声线。
+    func umpireCall(_ call: AnnouncementBuilder.UmpireCall) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        announcer.speak(builder.umpireCall(call, language: language))
+    }
+
+    /// 一键静音：立即停掉正在播的语音与所有音效。
+    func silenceAll() {
+        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+        announcer.stop()
+        soundEffects.stopAll()
+    }
+
     /// 播报当前比分（供手动「再报一次」按钮使用）。
     func repeatCurrentScore() {
         let event: MatchEvent = state.phase == .tiebreak ? .tiebreakPoint : .point
