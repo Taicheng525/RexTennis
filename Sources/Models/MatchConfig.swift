@@ -31,36 +31,24 @@ struct MatchConfig: Equatable, Codable {
     var targetGames: Int
     /// 首个发球方。
     var firstServer: Side
-    /// 队名（选填）。非空时界面显示与播报优先用队名，否则用队员名。
-    var teamNameMe: String
-    var teamNameOpp: String
-    /// 双方队员名（每队 1-2 人：单打 1 个，双打 2 个）。已 trim、去空。
-    /// 报分本身只报数字；名字用于界面显示与「拿下这一局/该谁发球」等事件播报。
+    /// 每队名字（1-2 个）：单打 1 个，双打 2 个。第 1 个可写球员名，也可直接写队名。
+    /// 报分只报数字；名字用于界面显示与「拿下这一局/该谁发球」等事件播报。
     var playersMe: [String]
     var playersOpp: [String]
 
     init(targetGames: Int, firstServer: Side,
-         teamNameMe: String = "", teamNameOpp: String = "",
          playersMe: [String] = ["我方"], playersOpp: [String] = ["对方"]) {
         self.targetGames = targetGames
         self.firstServer = firstServer
-        self.teamNameMe = teamNameMe
-        self.teamNameOpp = teamNameOpp
         self.playersMe = playersMe.isEmpty ? ["我方"] : playersMe
         self.playersOpp = playersOpp.isEmpty ? ["对方"] : playersOpp
     }
 
-    /// 某一方的队员名数组。
+    /// 某一方的名字数组。
     func players(for side: Side) -> [String] { side == .me ? playersMe : playersOpp }
 
-    /// 某一方的队名（可能为空）。
-    func teamName(for side: Side) -> String { side == .me ? teamNameMe : teamNameOpp }
-
-    /// 界面显示名：有队名用队名，否则队员名（双打「甲 / 乙」）。
-    func name(for side: Side) -> String {
-        let tn = teamName(for: side)
-        return tn.isEmpty ? players(for: side).joined(separator: " / ") : tn
-    }
+    /// 界面显示名：双打用「甲 / 乙」。
+    func name(for side: Side) -> String { players(for: side).joined(separator: " / ") }
 
     /// 是否双打（任一方 2 人）。
     var isDoubles: Bool { playersMe.count > 1 || playersOpp.count > 1 }

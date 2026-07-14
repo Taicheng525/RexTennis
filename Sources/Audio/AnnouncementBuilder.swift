@@ -89,8 +89,6 @@ struct AnnouncementBuilder {
 
     /// 播报用队员名：双打按语言连接（中文「、」、英文「and」），单打即本人。
     private func spokenName(_ s: MatchState, _ side: Side, _ lang: AnnounceLanguage) -> String {
-        let tn = s.config.teamName(for: side)
-        if !tn.isEmpty { return tn }
         let players = s.config.players(for: side)
         guard players.count > 1 else { return players.first ?? "" }
         return players.joined(separator: lang == .chinese ? "、" : " and ")
