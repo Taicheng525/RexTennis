@@ -1,13 +1,15 @@
 import AVFoundation
 
-/// 三种真实球场氛围音效（内置真实录音，Mixkit 免费授权），比赛中手动触发。
+/// 真实球场氛围音效（内置真实录音，比赛中手动触发）。
 /// - applause：球场轻掌声（好球礼貌鼓掌）
 /// - cheer：热烈掌声 + 欢呼
 /// - bigcheer：狂欢人群 + 口哨（关键分/胜利）
+/// - cheers：全场人群欢呼
+/// - groan：观众失望叹息（可惜的失误/被逆转）
 final class SoundEffects {
 
     enum Kind: String, CaseIterable, Identifiable {
-        case applause, cheer, bigcheer
+        case applause, cheer, bigcheer, cheers, groan
         var id: String { rawValue }
 
         fileprivate var fileName: String { rawValue }

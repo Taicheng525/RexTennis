@@ -112,11 +112,83 @@ enum OfflineFX {
 
         let voiceDur = Double(voice.frameLength) / format.sampleRate
         let padded = TTSRender.padded(voice, leadingSeconds: 0.08) ?? voice   // 抬麦停顿
+        let totalDur = voiceDur + 1.5
 
-        return renderOffline(engine: engine, duration: voiceDur + 1.5) {
+        // 现场人群底噪：真实球场氛围垫底，让报分不像"空房间里说话"。
+        // 音量压得很低——底噪一响就露馅，宁可若有若无。循环 + 淡入淡出铺满整段。
+        var bedPlayer: AVAudioPlayerNode?
+        var bedBuffer: AVAudioPCMBuffer?
+        if let bed = ambienceBed(), let looped = loopedFaded(bed, seconds: totalDur) {
+            let bp = AVAudioPlayerNode()
+            engine.attach(bp)
+            engine.connect(bp, to: engine.mainMixerNode, format: format)
+            bp.volume = 0.085
+            bedPlayer = bp
+            bedBuffer = looped
+        }
+
+        return renderOffline(engine: engine, duration: totalDur) {
+            if let bedPlayer, let bedBuffer {
+                bedPlayer.scheduleBuffer(bedBuffer, at: nil, options: [], completionHandler: nil)
+                bedPlayer.play()
+            }
             player.scheduleBuffer(padded, at: nil, options: [], completionHandler: nil)
             player.play()
         }
+    }
+
+    /// 人群底噪源：加载 ambience.m4a，只取**前 1/3**（用户指定那段最自然），
+    /// 转标准格式后缓存。nil 表示无背景音（不影响报分本身）。
+    private static var ambienceCache: AVAudioPCMBuffer?
+    private static let ambienceLock = NSLock()
+    private static func ambienceBed() -> AVAudioPCMBuffer? {
+        ambienceLock.lock(); defer { ambienceLock.unlock() }
+        if let c = ambienceCache { return c }
+        guard let url = Bundle.main.url(forResource: "ambience", withExtension: "m4a"),
+              let file = try? AVAudioFile(forReading: url) else { return nil }
+        let len = AVAudioFrameCount(file.length)
+        guard len > 0,
+              let raw = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: len),
+              (try? file.read(into: raw)) != nil,
+              let std = TTSRender.convertToStandard(raw) else { return nil }
+        let third = max(1, std.frameLength / 3)   // 只取前 1/3
+        guard let head = AVAudioPCMBuffer(pcmFormat: std.format, frameCapacity: third),
+              let src = std.floatChannelData, let dst = head.floatChannelData else { return nil }
+        head.frameLength = third
+        for ch in 0..<Int(std.format.channelCount) {
+            memcpy(dst[ch], src[ch], Int(third) * 4)
+        }
+        ambienceCache = head
+        return head
+    }
+
+    /// 把底噪循环铺满 `seconds`，首尾各 0.4s 淡入淡出（避免突兀起止）。
+    private static func loopedFaded(_ src: AVAudioPCMBuffer, seconds: Double) -> AVAudioPCMBuffer? {
+        let format = src.format
+        let total = AVAudioFrameCount(seconds * format.sampleRate)
+        guard src.frameLength > 0, total > 0,
+              let out = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: total),
+              let sData = src.floatChannelData, let dData = out.floatChannelData else { return nil }
+        out.frameLength = total
+        let srcLen = Int(src.frameLength)
+        let n = Int(total)
+        let ch = Int(format.channelCount)
+        for c in 0..<ch {
+            let s = sData[c], d = dData[c]
+            for i in 0..<n { d[i] = s[i % srcLen] }   // 循环填充
+        }
+        let fade = min(Int(0.4 * format.sampleRate), n / 2)
+        if fade > 0 {
+            for c in 0..<ch {
+                let d = dData[c]
+                for i in 0..<fade {
+                    let g = Float(i) / Float(fade)
+                    d[i] *= g
+                    d[n - 1 - i] *= g
+                }
+            }
+        }
+        return out
     }
 
     // MARK: - 渲染与封装

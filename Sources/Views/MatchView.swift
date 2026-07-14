@@ -206,10 +206,12 @@ struct MatchView: View {
     // MARK: - 欢呼音效
 
     private var cheerBar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 8) {
             cheerButton("hands.clap.fill", .applause)
             cheerButton("music.mic", .cheer)
             cheerButton("party.popper.fill", .bigcheer)
+            cheerButton("person.3.fill", .cheers)
+            cheerButton("hand.thumbsdown.fill", .groan)
         }
         .padding(.top, 6)
     }
@@ -219,9 +221,10 @@ struct MatchView: View {
             viewModel.cheer(kind)
         } label: {
             Image(systemName: icon)
-                .font(.system(size: 20, weight: .semibold))
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(RexTheme.accent)
-                .frame(width: 66, height: 46)
+                .frame(maxWidth: .infinity)
+                .frame(height: 46)
                 .background(RexTheme.card, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 15, style: .continuous)
