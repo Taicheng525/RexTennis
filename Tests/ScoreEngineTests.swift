@@ -289,9 +289,9 @@ final class ScoreEngineTests: XCTestCase {
                                                playersMe: ["张三", "李四"],
                                                playersOpp: ["Smith", "Jones"]))
         s.gamesMe = 1
-        // 有队名：局末报队名
+        // 有队名：局末队名 + 队员名都报
         XCTAssertEqual(builder.utterance(for: [.gameWon(.me)], state: s, language: .chinese),
-                       "闪电队拿下这一局，局分1比0")
+                       "闪电队，张三、李四拿下这一局，局分1比0")
         // 发球：队名 + 当前发球队员（索引 0 = 张三）
         s.serverPlayerMe = 0
         XCTAssertEqual(builder.utterance(for: [.serveChange(.me)], state: s, language: .chinese),

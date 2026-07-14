@@ -87,13 +87,18 @@ struct AnnouncementBuilder {
         }
     }
 
-    /// 播报用队员名：双打按语言连接（中文「、」、英文「and」），单打即本人。
+    /// 播报名：**队名 + 队员名都报**（有队名时）。
+    /// 双打队员名按语言连接（中文「、」、英文「and」），单打即本人；
+    /// 有队名则「队名，队员名」。例：「闪电队，张三、李四」/「Lightning, Smith and Jones」。
     private func spokenName(_ s: MatchState, _ side: Side, _ lang: AnnounceLanguage) -> String {
-        let tn = s.config.teamName(for: side)
-        if !tn.isEmpty { return tn }
         let players = s.config.players(for: side)
-        guard players.count > 1 else { return players.first ?? "" }
-        return players.joined(separator: lang == .chinese ? "、" : " and ")
+        let names = players.count > 1
+            ? players.joined(separator: lang == .chinese ? "、" : " and ")
+            : (players.first ?? "")
+        let tn = s.config.teamName(for: side)
+        if tn.isEmpty { return names }
+        if names.isEmpty { return tn }
+        return lang == .chinese ? "\(tn)，\(names)" : "\(tn), \(names)"
     }
 
     /// 发球播报名：队名（若有）+ 当前发球队员（双打只报发球那一位，避免「队名+两人」过长）。

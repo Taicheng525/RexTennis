@@ -134,11 +134,22 @@ struct MatchView: View {
             }
             .frame(width: 18)
 
-            Text(state.config.name(for: side))
-                .font(.system(.title3, design: .serif).weight(.bold))
-                .foregroundStyle(RexTheme.text)
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
+            // 小标题：队名（若有）；大标题：队员姓名
+            VStack(alignment: .leading, spacing: 1) {
+                if !state.config.teamName(for: side).isEmpty {
+                    Text(state.config.teamName(for: side))
+                        .font(.system(size: 11, weight: .bold, design: .serif))
+                        .tracking(0.5)
+                        .foregroundStyle(RexTheme.textDim)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                Text(state.config.players(for: side).joined(separator: " / "))
+                    .font(.system(.title3, design: .serif).weight(.bold))
+                    .foregroundStyle(RexTheme.text)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
 
             Spacer(minLength: 4)
 

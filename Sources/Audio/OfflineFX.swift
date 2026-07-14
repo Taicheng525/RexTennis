@@ -139,29 +139,23 @@ enum OfflineFX {
         }
     }
 
-    /// 人群底噪源：加载 ambience.m4a，只取**前 1/3**（用户指定那段最自然），
-    /// 转标准格式后缓存。nil 表示无背景音（不影响报分本身）。
+    /// 报分背景底噪源：加载 **court.m4a**（安静的场地环境音，**非欢呼**——报分时全场
+    /// 保持安静，只有若有若无的场馆底噪）。转标准格式后整段缓存，靠 loopedFaded 循环铺满。
+    /// 返回 nil（未随包提供该文件）时，报分不加背景，只保留 PA 回声/混响——绝不再垫欢呼声。
     private static var ambienceCache: AVAudioPCMBuffer?
     private static let ambienceLock = NSLock()
     private static func ambienceBed() -> AVAudioPCMBuffer? {
         ambienceLock.lock(); defer { ambienceLock.unlock() }
         if let c = ambienceCache { return c }
-        guard let url = Bundle.main.url(forResource: "ambience", withExtension: "m4a"),
+        guard let url = Bundle.main.url(forResource: "court", withExtension: "m4a"),
               let file = try? AVAudioFile(forReading: url) else { return nil }
         let len = AVAudioFrameCount(file.length)
         guard len > 0,
               let raw = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: len),
               (try? file.read(into: raw)) != nil,
               let std = TTSRender.convertToStandard(raw) else { return nil }
-        let third = max(1, std.frameLength / 3)   // 只取前 1/3
-        guard let head = AVAudioPCMBuffer(pcmFormat: std.format, frameCapacity: third),
-              let src = std.floatChannelData, let dst = head.floatChannelData else { return nil }
-        head.frameLength = third
-        for ch in 0..<Int(std.format.channelCount) {
-            memcpy(dst[ch], src[ch], Int(third) * 4)
-        }
-        ambienceCache = head
-        return head
+        ambienceCache = std
+        return std
     }
 
     /// 把底噪循环铺满 `seconds`：起始 0.5s 淡入，结尾 **2.0s 缓慢淡出**（平方曲线），
