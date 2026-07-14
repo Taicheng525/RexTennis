@@ -72,9 +72,9 @@ final class Announcer {
             let key = "\(text)|\(voice.identifier)|\(cjkVoice?.identifier ?? "-")|\(emphatic)"
             var data = self.cache[key]
             if data == nil {
-                // 裁判喊话(emphatic)放慢语速，让 "Out" 这类短词收音完整、更有喊话的分量；
-                // 常规报分保持接近自然的语速。改音高会让人声失真，故只改语速。
-                let rate = AVSpeechUtteranceDefaultSpeechRate * (emphatic ? 0.80 : 0.94)
+                // 裁判喊话与报分同速：之前一刀切放慢反而让 quiet/let 拖沓、"Out" 也没更清楚。
+                // 喊话的清晰度改由烘焙阶段「去回声」解决（回声才是糊掉短词的元凶）。
+                let rate = AVSpeechUtteranceDefaultSpeechRate * 0.94
                 let buffer: AVAudioPCMBuffer?
                 if needsMix, let cjkVoice {
                     buffer = await TTSRender.renderMixed(text: text, primaryVoice: voice,

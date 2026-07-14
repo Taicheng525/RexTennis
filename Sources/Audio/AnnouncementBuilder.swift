@@ -6,7 +6,7 @@ import Foundation
 /// - **报分只报数字，不带队名**，且**发球方分数永远在前**。
 /// - 0 的读法：英文 love（抢七读 zero），中文 零。
 /// - 双方同分：中文「十五平」，英文 "fifteen all"。
-/// - 队名只出现在事件播报里：拿下一局 / 该谁发球 / 胜盘。
+/// - 队名只在「发球」播报时出现（英文播报里嵌中文队名会卡顿，故局末/胜盘只报队员名）。
 struct AnnouncementBuilder {
 
     /// 生成一次得分后的完整播报文案。events 为空则返回空串。
@@ -30,7 +30,7 @@ struct AnnouncementBuilder {
         let zh = language == .chinese
         switch call {
         case .quiet:     return zh ? "请大家保持安静，谢谢" : "Ladies and gentlemen, quiet please. Thank you"
-        case .out:       return zh ? "出界"       : "Out"
+        case .out:       return zh ? "出界"       : "Out!"
         case .letFirst:  return zh ? "擦网，重发一发" : "Let. First service"
         case .letSecond: return zh ? "擦网，重发二发" : "Let. Second service"
         }
@@ -87,18 +87,12 @@ struct AnnouncementBuilder {
         }
     }
 
-    /// 播报名：**队名 + 队员名都报**（有队名时）。
-    /// 双打队员名按语言连接（中文「、」、英文「and」），单打即本人；
-    /// 有队名则「队名，队员名」。例：「闪电队，张三、李四」/「Lightning, Smith and Jones」。
+    /// 局末/胜盘播报名：**只报队员名**（不报队名——队名只在发球时报，避免英文播报里
+    /// 嵌中文队名造成卡顿/多余停顿）。双打两名队员按语言连接（中文「、」、英文「and」）。
     private func spokenName(_ s: MatchState, _ side: Side, _ lang: AnnounceLanguage) -> String {
         let players = s.config.players(for: side)
-        let names = players.count > 1
-            ? players.joined(separator: lang == .chinese ? "、" : " and ")
-            : (players.first ?? "")
-        let tn = s.config.teamName(for: side)
-        if tn.isEmpty { return names }
-        if names.isEmpty { return tn }
-        return lang == .chinese ? "\(tn)，\(names)" : "\(tn), \(names)"
+        guard players.count > 1 else { return players.first ?? "" }
+        return players.joined(separator: lang == .chinese ? "、" : " and ")
     }
 
     /// 发球播报名：队名（若有）+ 当前发球队员（双打只报发球那一位，避免「队名+两人」过长）。

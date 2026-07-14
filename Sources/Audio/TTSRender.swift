@@ -84,10 +84,16 @@ enum TTSRender {
         var current = ""
         var currentIsCJK: Bool?
         for ch in text {
+            // 标点/空白不触发中英切换，附到当前段——否则像「，」这样的孤立标点段
+            // 会被单独交给英文嗓朗读，读成 "comma"。（字母/数字/CJK 都属 alphanumerics）
+            if String(ch).rangeOfCharacter(from: .alphanumerics) == nil {
+                current.append(ch)
+                continue
+            }
             let isCJK = String(ch).containsCJKText
             if currentIsCJK == nil {
                 currentIsCJK = isCJK
-                current = String(ch)
+                current.append(ch)
             } else if isCJK == currentIsCJK {
                 current.append(ch)
             } else {
@@ -96,7 +102,7 @@ enum TTSRender {
                 currentIsCJK = isCJK
             }
         }
-        if let c = currentIsCJK, !current.isEmpty { result.append((current, c)) }
+        if !current.isEmpty { result.append((current, currentIsCJK ?? false)) }
         return result
     }
 

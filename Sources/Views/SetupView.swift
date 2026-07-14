@@ -28,20 +28,21 @@ struct SetupView: View {
     private var isChinese: Bool { appModel.language == .chinese }
 
     private func trimmed(_ s: String) -> String { s.trimmingCharacters(in: .whitespaces) }
-    /// 没填任何名字时的中性球员默认名（不是队名）。
-    private func playerDefault(_ side: Side) -> String {
-        side == .me ? (isChinese ? "选手 1" : "Player 1") : (isChinese ? "选手 2" : "Player 2")
+    /// 某个位置：填了就用填的，空着给中性默认名。
+    private func slot(_ raw: String, zh: String, en: String) -> String {
+        let t = trimmed(raw)
+        return t.isEmpty ? (isChinese ? zh : en) : t
     }
 
+    /// 我方队员：单打 1 人（默认「选手 1」），双打 2 人（默认「选手 1 / 选手 2」）。
     private var resolvedPlayersMe: [String] {
-        var a = [trimmed(me1)]; if isDoubles { a.append(trimmed(me2)) }
-        let f = a.filter { !$0.isEmpty }
-        return f.isEmpty ? [playerDefault(.me)] : f
+        isDoubles ? [slot(me1, zh: "选手 1", en: "Player 1"), slot(me2, zh: "选手 2", en: "Player 2")]
+                  : [slot(me1, zh: "选手 1", en: "Player 1")]
     }
+    /// 对方队员：单打默认「选手 2」，双打默认「选手 3 / 选手 4」（不与我方重名）。
     private var resolvedPlayersOpp: [String] {
-        var a = [trimmed(opp1)]; if isDoubles { a.append(trimmed(opp2)) }
-        let f = a.filter { !$0.isEmpty }
-        return f.isEmpty ? [playerDefault(.opponent)] : f
+        isDoubles ? [slot(opp1, zh: "选手 3", en: "Player 3"), slot(opp2, zh: "选手 4", en: "Player 4")]
+                  : [slot(opp1, zh: "选手 2", en: "Player 2")]
     }
     /// 首发选择器上的短标识：有队名用队名，否则用队员名（没填则中性「选手 1/2」）。
     private var labelMe: String { trimmed(teamMe).isEmpty ? resolvedPlayersMe.joined(separator: " / ") : trimmed(teamMe) }

@@ -97,13 +97,15 @@ enum OfflineFX {
 
         // 体育场 PA 麦克风感：适度短回声 + 空间混响（真正的现场感靠人群底噪补足，
         // 混响过重反而像空房间）
+        // 裁判喊话(emphatic)去掉回声、只留极轻空间感——回声会把 "Out" 这类短词的尾音
+        // 糊掉、也让 quiet/let 听着拖；常规报分保留 PA 回声的现场感。
         echo.delayTime = 0.14          // 短前反射：喇叭扩声感
-        echo.feedback = 15             // 反射次数适中
-        echo.wetDryMix = 11            // 回声隐约可闻，不过重
+        echo.feedback = emphatic ? 0 : 15
+        echo.wetDryMix = emphatic ? 0 : 11   // 喊话：无回声，干净清楚
         echo.lowPassCutoff = 3400      // 回声尾略闷，像远处看台反射
 
         reverb.loadFactoryPreset(.largeHall)   // 大厅≈体育场空间
-        reverb.wetDryMix = 15          // 空间感适中
+        reverb.wetDryMix = emphatic ? 6 : 15   // 喊话只留一点点空间感
 
         engine.attach(player)
         engine.attach(echo)
