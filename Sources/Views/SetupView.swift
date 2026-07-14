@@ -1,5 +1,4 @@
 import SwiftUI
-import AVFoundation
 
 /// 赛前设置：分三组——队伍、赛制、播报。全部有默认值，可直接开始。
 struct SetupView: View {
@@ -20,32 +19,6 @@ struct SetupView: View {
     private var resolvedNameOpp: String {
         let t = nameOpp.trimmingCharacters(in: .whitespaces)
         return t.isEmpty ? (isChinese ? "对方" : "Team B") : t
-    }
-
-    /// 整场人声语言：完全跟随所选播报语言（与 Announcer 一致）。
-    private var effectiveVoiceCode: String { appModel.language.voiceCode }
-
-    /// 英文播报但队名是中文——英文人声读不出中文字，提示用户改用英文队名。
-    private var nameLanguageMismatch: Bool {
-        appModel.language == .english
-            && (resolvedNameMe.containsCJKText || resolvedNameOpp.containsCJKText)
-    }
-
-    /// 当前实际会用到的裁判人声——让用户确认下载的增强/高级人声是否被选中。
-    private var currentVoice: AVSpeechSynthesisVoice? {
-        Announcer.pickVoice(languageCode: effectiveVoiceCode, umpire: appModel.umpire)
-    }
-    /// 当前人声是否为「标准」档（偏机械，需引导用户下载增强/高级）。
-    private var currentVoiceIsDefault: Bool {
-        guard let v = currentVoice else { return true }
-        return v.quality != .premium && v.quality != .enhanced
-    }
-    private func qualityLabel(_ v: AVSpeechSynthesisVoice) -> String {
-        switch v.quality {
-        case .premium:  return isChinese ? "高级" : "Premium"
-        case .enhanced: return isChinese ? "增强" : "Enhanced"
-        default:        return isChinese ? "标准" : "Default"
-        }
     }
 
     var body: some View {
@@ -97,28 +70,6 @@ struct SetupView: View {
                                 Text(isChinese ? "男声" : "Male").tag(UmpireVoice.male)
                             }
                             .pickerStyle(.segmented)
-                        }
-                        if nameLanguageMismatch {
-                            Label(isChinese
-                                  ? "英文播报读不出中文队名，建议把队名也改成英文"
-                                  : "English voice can't read Chinese team names — use English names",
-                                  systemImage: "exclamationmark.triangle")
-                                .font(.caption2)
-                                .foregroundStyle(.orange.opacity(0.85))
-                        }
-                        if let v = currentVoice {
-                            Label {
-                                Text((isChinese ? "当前：" : "Now: ") + v.name + " · " + qualityLabel(v)
-                                     + (currentVoiceIsDefault
-                                        ? (isChinese
-                                           ? "。标准音质偏机械——在 设置→辅助功能→朗读内容→声音 下载增强/高级版（英式/美式均可）"
-                                           : ". Default is robotic — download an Enhanced/Premium voice in Settings → Accessibility → Spoken Content → Voices")
-                                        : (isChinese ? "（高音质人声）" : " (high quality)")))
-                            } icon: {
-                                Image(systemName: currentVoiceIsDefault ? "exclamationmark.triangle" : "checkmark.seal.fill")
-                            }
-                            .font(.caption2)
-                            .foregroundStyle(currentVoiceIsDefault ? .orange.opacity(0.85) : RexTheme.textDim)
                         }
                     }
 
