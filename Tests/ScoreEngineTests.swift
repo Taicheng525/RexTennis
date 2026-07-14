@@ -274,12 +274,47 @@ final class ScoreEngineTests: XCTestCase {
                                                playersMe: ["张三", "李四"],
                                                playersOpp: ["Smith", "Jones"]))
         s.gamesMe = 1; s.gamesOpp = 0
-        // 中文双打：两名队员用顿号连接
+        // 双打局末：两名队员用顿号连接（队赢了，报两人）
         XCTAssertEqual(builder.utterance(for: [.gameWon(.me)], state: s, language: .chinese),
                        "张三、李四拿下这一局，局分1比0")
-        // 英文双打：用 and 连接
+        // 双打发球：只报当前发球队员（默认索引 0 = Smith），不报两人
         XCTAssertEqual(builder.utterance(for: [.serveChange(.opponent)], state: s, language: .english),
-                       "Smith and Jones to serve")
+                       "Smith to serve")
+    }
+
+    func testAnnouncementTeamNameAndServer() {
+        let builder = AnnouncementBuilder()
+        var s = MatchState(config: MatchConfig(targetGames: 4, firstServer: .me,
+                                               teamNameMe: "闪电队",
+                                               playersMe: ["张三", "李四"],
+                                               playersOpp: ["Smith", "Jones"]))
+        s.gamesMe = 1
+        // 有队名：局末报队名
+        XCTAssertEqual(builder.utterance(for: [.gameWon(.me)], state: s, language: .chinese),
+                       "闪电队拿下这一局，局分1比0")
+        // 发球：队名 + 当前发球队员（索引 0 = 张三）
+        s.serverPlayerMe = 0
+        XCTAssertEqual(builder.utterance(for: [.serveChange(.me)], state: s, language: .chinese),
+                       "该闪电队，张三发球")
+        // 队内换人：索引 1 = 李四
+        s.serverPlayerMe = 1
+        XCTAssertEqual(builder.utterance(for: [.serveChange(.me)], state: s, language: .chinese),
+                       "该闪电队，李四发球")
+    }
+
+    func testDoublesServerPlayerAlternates() {
+        var s = MatchState(config: MatchConfig(targetGames: 6, firstServer: .me,
+                                               playersMe: ["A1", "A2"], playersOpp: ["B1", "B2"]))
+        // 我方发第 1 局并直落 4 分拿下
+        for _ in 0..<4 { ScoreEngine.applyPoint(.me, to: &s) }
+        XCTAssertEqual(s.server, .opponent)      // 换对方发球
+        XCTAssertEqual(s.serverPlayerMe, 1)      // 我方下次发球换 A2
+        XCTAssertEqual(s.serverPlayerOpp, 0)     // 对方本局用 B1
+        // 对方发第 2 局并拿下
+        for _ in 0..<4 { ScoreEngine.applyPoint(.opponent, to: &s) }
+        XCTAssertEqual(s.server, .me)
+        XCTAssertEqual(s.serverPlayerOpp, 1)     // 对方下次换 B2
+        XCTAssertEqual(s.serverPlayerIndex(for: .me), 1)   // 第 3 局我方由 A2 发
     }
 
     func testAnnouncementGameAndSet_zh() {

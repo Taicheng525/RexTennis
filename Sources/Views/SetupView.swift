@@ -12,6 +12,8 @@ struct SetupView: View {
     @State private var isDoubles: Bool = SettingsStore.isDoubles
     @State private var teamMe: String = SettingsStore.teamNameMe
     @State private var teamOpp: String = SettingsStore.teamNameOpp
+    @State private var showTeamMe: Bool = !SettingsStore.teamNameMe.isEmpty
+    @State private var showTeamOpp: Bool = !SettingsStore.teamNameOpp.isEmpty
     @State private var me1: String = SettingsStore.playersMe.first ?? ""
     @State private var me2: String = SettingsStore.playersMe.count > 1 ? SettingsStore.playersMe[1] : ""
     @State private var opp1: String = SettingsStore.playersOpp.first ?? ""
@@ -57,11 +59,11 @@ struct SetupView: View {
                         .pickerStyle(.segmented)
 
                         teamSection(isChinese ? "我方" : "YOUR SIDE",
-                                    team: $teamMe, p1: $me1, p2: $me2,
+                                    team: $teamMe, showTeam: $showTeamMe, p1: $me1, p2: $me2,
                                     tf: .teamMe, f1: .me1, f2: .me2)
                         Rectangle().fill(RexTheme.hairline).frame(height: 1)
                         teamSection(isChinese ? "对方" : "OPPONENT",
-                                    team: $teamOpp, p1: $opp1, p2: $opp2,
+                                    team: $teamOpp, showTeam: $showTeamOpp, p1: $opp1, p2: $opp2,
                                     tf: .teamOpp, f1: .opp1, f2: .opp2)
                     }
 
@@ -125,15 +127,41 @@ struct SetupView: View {
 
     // MARK: - 一队的输入：队名（选填）+ 队员名（单打 1 / 双打 2）
 
-    private func teamSection(_ title: String, team: Binding<String>,
+    private func teamSection(_ title: String, team: Binding<String>, showTeam: Binding<Bool>,
                              p1: Binding<String>, p2: Binding<String>,
                              tf: Field, f1: Field, f2: Field) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.system(size: 11, weight: .bold, design: .serif))
-                .tracking(1.4)
-                .foregroundStyle(RexTheme.textDim)
-            nameField(isChinese ? "队名（选填）" : "Team name (optional)", text: team, field: tf)
+            HStack {
+                Text(title)
+                    .font(.system(size: 11, weight: .bold, design: .serif))
+                    .tracking(1.4)
+                    .foregroundStyle(RexTheme.textDim)
+                Spacer()
+                if !showTeam.wrappedValue {
+                    Button {
+                        withAnimation(.snappy(duration: 0.2)) { showTeam.wrappedValue = true }
+                    } label: {
+                        Label(isChinese ? "队名" : "Team name", systemImage: "plus")
+                            .font(.caption2.weight(.medium))
+                            .foregroundStyle(RexTheme.accent)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            if showTeam.wrappedValue {
+                HStack(spacing: 8) {
+                    nameField(isChinese ? "队名" : "Team name", text: team, field: tf)
+                    Button {
+                        showTeam.wrappedValue = false
+                        team.wrappedValue = ""
+                    } label: {
+                        Image(systemName: "minus.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(RexTheme.textFaint)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
             if isDoubles {
                 nameField(isChinese ? "队员 1" : "Player 1", text: p1, field: f1)
                 nameField(isChinese ? "队员 2" : "Player 2", text: p2, field: f2)

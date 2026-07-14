@@ -80,6 +80,7 @@ enum ScoreEngine {
         if totalGames % 2 == 1 {
             events.append(.changeEnds)
         }
+        s.advanceServerPlayer(for: s.server)   // 发完这局的队，下次发球换另一位队员（双打）
         s.server = s.server.other
         events.append(.serveChange(s.server))
     }

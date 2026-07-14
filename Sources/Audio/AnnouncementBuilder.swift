@@ -67,7 +67,7 @@ struct AnnouncementBuilder {
             return zh ? "换边" : "Change ends"   // 简洁语音 + 界面文字双提示
 
         case .serveChange(let side):
-            let name = spokenName(s, side, lang)
+            let name = serverSpokenName(s, side, lang)
             return zh ? "该\(name)发球" : "\(name) to serve"
 
         case .setWon(let side):
@@ -94,6 +94,16 @@ struct AnnouncementBuilder {
         let players = s.config.players(for: side)
         guard players.count > 1 else { return players.first ?? "" }
         return players.joined(separator: lang == .chinese ? "、" : " and ")
+    }
+
+    /// 发球播报名：队名（若有）+ 当前发球队员（双打只报发球那一位，避免「队名+两人」过长）。
+    private func serverSpokenName(_ s: MatchState, _ side: Side, _ lang: AnnounceLanguage) -> String {
+        let players = s.config.players(for: side)
+        let idx = min(max(0, s.serverPlayerIndex(for: side)), players.count - 1)
+        let player = players.isEmpty ? "" : players[idx]
+        let tn = s.config.teamName(for: side)
+        if tn.isEmpty { return player }
+        return lang == .chinese ? "\(tn)，\(player)" : "\(tn), \(player)"
     }
 
     // MARK: - 报分（发球方在前，只报数字）
