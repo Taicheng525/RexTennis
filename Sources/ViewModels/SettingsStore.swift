@@ -4,8 +4,8 @@ import Foundation
 enum SettingsStore {
     private static let languageKey = "rex.announceLanguage"
     private static let umpireKey = "rex.umpireVoice"
-    private static let nameMeKey = "rex.nameMe"
-    private static let nameOppKey = "rex.nameOpp"
+    private static let playersMeKey = "rex.playersMe"
+    private static let playersOppKey = "rex.playersOpp"
 
     static var language: AnnounceLanguage {
         get {
@@ -27,13 +27,13 @@ enum SettingsStore {
         }
     }
 
-    static var nameMe: String {
-        get { UserDefaults.standard.string(forKey: nameMeKey) ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: nameMeKey) }
+    static var playersMe: [String] {
+        get { UserDefaults.standard.stringArray(forKey: playersMeKey) ?? [] }
+        set { UserDefaults.standard.set(newValue, forKey: playersMeKey) }
     }
 
-    static var nameOpp: String {
-        get { UserDefaults.standard.string(forKey: nameOppKey) ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: nameOppKey) }
+    static var playersOpp: [String] {
+        get { UserDefaults.standard.stringArray(forKey: playersOppKey) ?? [] }
+        set { UserDefaults.standard.set(newValue, forKey: playersOppKey) }
     }
 }

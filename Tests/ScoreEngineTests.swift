@@ -258,7 +258,7 @@ final class ScoreEngineTests: XCTestCase {
     func testAnnouncementUsesTeamNames() {
         let builder = AnnouncementBuilder()
         var s = MatchState(config: MatchConfig(targetGames: 4, firstServer: .me,
-                                               nameMe: "暴龙队", nameOpp: "闪电队"))
+                                               playersMe: ["暴龙队"], playersOpp: ["闪电队"]))
         s.gamesMe = 2; s.gamesOpp = 1
         // 拿下一局：带队名
         XCTAssertEqual(builder.utterance(for: [.gameWon(.me)], state: s, language: .chinese),
@@ -266,6 +266,20 @@ final class ScoreEngineTests: XCTestCase {
         // 换发球：带队名
         XCTAssertEqual(builder.utterance(for: [.serveChange(.opponent)], state: s, language: .chinese),
                        "该闪电队发球")
+    }
+
+    func testAnnouncementDoublesNames() {
+        let builder = AnnouncementBuilder()
+        var s = MatchState(config: MatchConfig(targetGames: 4, firstServer: .me,
+                                               playersMe: ["张三", "李四"],
+                                               playersOpp: ["Smith", "Jones"]))
+        s.gamesMe = 1; s.gamesOpp = 0
+        // 中文双打：两名队员用顿号连接
+        XCTAssertEqual(builder.utterance(for: [.gameWon(.me)], state: s, language: .chinese),
+                       "张三、李四拿下这一局，局分1比0")
+        // 英文双打：用 and 连接
+        XCTAssertEqual(builder.utterance(for: [.serveChange(.opponent)], state: s, language: .english),
+                       "Smith and Jones to serve")
     }
 
     func testAnnouncementGameAndSet_zh() {

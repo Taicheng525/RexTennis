@@ -1,25 +1,34 @@
 import SwiftUI
 
 /// 赛前设置：分三组——队伍、赛制、播报。全部有默认值，可直接开始。
+/// 每队 1-2 名队员：填 1 个是单打，填 2 个是双打（自动判断）。
 struct SetupView: View {
     @EnvironmentObject private var appModel: AppModel
 
     @State private var targetGames: Int = 4
     @State private var firstServer: Side = .me
-    @State private var nameMe: String = SettingsStore.nameMe
-    @State private var nameOpp: String = SettingsStore.nameOpp
-    @FocusState private var focusedField: Side?
+    @State private var me1: String = SettingsStore.playersMe.first ?? ""
+    @State private var me2: String = SettingsStore.playersMe.count > 1 ? SettingsStore.playersMe[1] : ""
+    @State private var opp1: String = SettingsStore.playersOpp.first ?? ""
+    @State private var opp2: String = SettingsStore.playersOpp.count > 1 ? SettingsStore.playersOpp[1] : ""
+
+    private enum Field: Hashable { case me1, me2, opp1, opp2 }
+    @FocusState private var focused: Field?
 
     private var isChinese: Bool { appModel.language == .chinese }
 
-    private var resolvedNameMe: String {
-        let t = nameMe.trimmingCharacters(in: .whitespaces)
-        return t.isEmpty ? (isChinese ? "我方" : "Team A") : t
+    private func trimmed(_ s: String) -> String { s.trimmingCharacters(in: .whitespaces) }
+
+    private var resolvedPlayersMe: [String] {
+        let a = [trimmed(me1), trimmed(me2)].filter { !$0.isEmpty }
+        return a.isEmpty ? [isChinese ? "我方" : "Team A"] : a
     }
-    private var resolvedNameOpp: String {
-        let t = nameOpp.trimmingCharacters(in: .whitespaces)
-        return t.isEmpty ? (isChinese ? "对方" : "Team B") : t
+    private var resolvedPlayersOpp: [String] {
+        let a = [trimmed(opp1), trimmed(opp2)].filter { !$0.isEmpty }
+        return a.isEmpty ? [isChinese ? "对方" : "Team B"] : a
     }
+    private var displayMe: String { resolvedPlayersMe.joined(separator: " / ") }
+    private var displayOpp: String { resolvedPlayersOpp.joined(separator: " / ") }
 
     var body: some View {
         ZStack {
@@ -31,10 +40,17 @@ struct SetupView: View {
                         .padding(.top, 40)
                         .padding(.bottom, 6)
 
-                    // ① 队伍
+                    // ① 队伍（每队 1-2 人：填第 2 个名字即为双打）
                     groupCard {
-                        teamField(isChinese ? "我方名称" : "Your team", text: $nameMe, side: .me)
-                        teamField(isChinese ? "对方名称" : "Opponent team", text: $nameOpp, side: .opponent)
+                        teamBlock(title: isChinese ? "我方" : "TEAM 1",
+                                  p1: $me1, p2: $me2, f1: .me1, f2: .me2)
+                        Rectangle().fill(RexTheme.hairline).frame(height: 1)
+                        teamBlock(title: isChinese ? "对方" : "TEAM 2",
+                                  p1: $opp1, p2: $opp2, f1: .opp1, f2: .opp2)
+                        Text(isChinese ? "每队填第 2 个名字即为双打" : "Add a 2nd name for doubles")
+                            .font(.caption2)
+                            .foregroundStyle(RexTheme.textFaint)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                     // ② 赛制 + 首发
@@ -48,8 +64,8 @@ struct SetupView: View {
                         }
                         inlineRow(isChinese ? "首个发球方" : "FIRST SERVER") {
                             Picker("", selection: $firstServer) {
-                                Text(resolvedNameMe).tag(Side.me)
-                                Text(resolvedNameOpp).tag(Side.opponent)
+                                Text(displayMe).tag(Side.me)
+                                Text(displayOpp).tag(Side.opponent)
                             }
                             .pickerStyle(.segmented)
                         }
@@ -99,29 +115,43 @@ struct SetupView: View {
         }
     }
 
-    // MARK: - 队名输入
+    // MARK: - 队伍输入（一队一块：标题 + 1-2 个队员名）
 
-    private func teamField(_ placeholder: String, text: Binding<String>, side: Side) -> some View {
-        HStack(spacing: 10) {
-            Circle()
-                .fill(side == .me ? RexTheme.green : RexTheme.cream)
-                .frame(width: 9, height: 9)
-            TextField("", text: text,
-                      prompt: Text(placeholder).foregroundStyle(RexTheme.textFaint))
-                .foregroundStyle(RexTheme.text)
-                .font(.body.weight(.medium))
-                .focused($focusedField, equals: side)
-                .submitLabel(.done)
-                .autocorrectionDisabled()
+    private func teamBlock(title: String,
+                           p1: Binding<String>, p2: Binding<String>,
+                           f1: Field, f2: Field) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(RexTheme.accent)
+                    .frame(width: 3, height: 14)
+                Text(title)
+                    .font(.system(size: 11, weight: .bold, design: .serif))
+                    .tracking(1.6)
+                    .foregroundStyle(RexTheme.textDim)
+            }
+            nameField(isChinese ? "队员 1" : "Player 1", text: p1, field: f1)
+            nameField(isChinese ? "队员 2（选填）" : "Player 2 (optional)", text: p2, field: f2)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .background(.black.opacity(0.30), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(focusedField == side ? RexTheme.accent.opacity(0.7) : RexTheme.hairline,
-                              lineWidth: 1)
-        )
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func nameField(_ placeholder: String, text: Binding<String>, field: Field) -> some View {
+        TextField("", text: text,
+                  prompt: Text(placeholder).foregroundStyle(RexTheme.textFaint))
+            .foregroundStyle(RexTheme.text)
+            .font(.body.weight(.medium))
+            .focused($focused, equals: field)
+            .submitLabel(.done)
+            .autocorrectionDisabled()
+            .padding(.horizontal, 14)
+            .padding(.vertical, 11)
+            .background(.black.opacity(0.30), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(focused == field ? RexTheme.accent.opacity(0.7) : RexTheme.hairline,
+                                  lineWidth: 1)
+            )
     }
 
     // MARK: - 分组卡 & 行
@@ -148,14 +178,14 @@ struct SetupView: View {
 
     private var startButton: some View {
         Button {
-            focusedField = nil
+            focused = nil
             SettingsStore.language = appModel.language
-            SettingsStore.nameMe = nameMe
-            SettingsStore.nameOpp = nameOpp
+            SettingsStore.playersMe = resolvedPlayersMe
+            SettingsStore.playersOpp = resolvedPlayersOpp
             appModel.startMatch(config: MatchConfig(targetGames: targetGames,
                                                     firstServer: firstServer,
-                                                    nameMe: resolvedNameMe,
-                                                    nameOpp: resolvedNameOpp))
+                                                    playersMe: resolvedPlayersMe,
+                                                    playersOpp: resolvedPlayersOpp))
         } label: {
             Text(isChinese ? "开始比赛" : "Start Match")
                 .font(.system(.title2, design: .serif).weight(.bold))

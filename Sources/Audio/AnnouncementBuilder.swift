@@ -29,7 +29,7 @@ struct AnnouncementBuilder {
     func umpireCall(_ call: UmpireCall, language: AnnounceLanguage) -> String {
         let zh = language == .chinese
         switch call {
-        case .quiet:     return zh ? "请保持安静" : "Quiet, please"
+        case .quiet:     return zh ? "请大家保持安静，谢谢" : "Ladies and gentlemen, quiet please. Thank you"
         case .out:       return zh ? "出界"       : "Out"
         case .letFirst:  return zh ? "擦网，重发一发" : "Let. First service"
         case .letSecond: return zh ? "擦网，重发二发" : "Let. Second service"
@@ -48,7 +48,7 @@ struct AnnouncementBuilder {
             return zh ? "平分，金球" : "Deuce, deciding point"
 
         case .gameWon(let side):
-            let name = s.config.name(for: side)
+            let name = spokenName(s, side, lang)
             let wg = s.games(for: side)
             let lg = s.games(for: side.other)
             if zh {
@@ -67,11 +67,11 @@ struct AnnouncementBuilder {
             return zh ? "换边" : "Change ends"   // 简洁语音 + 界面文字双提示
 
         case .serveChange(let side):
-            let name = s.config.name(for: side)
+            let name = spokenName(s, side, lang)
             return zh ? "该\(name)发球" : "\(name) to serve"
 
         case .setWon(let side):
-            let name = s.config.name(for: side)
+            let name = spokenName(s, side, lang)
             let wg = s.games(for: side)
             let lg = s.games(for: side.other)
             let tb = s.finishedByTiebreak
@@ -85,6 +85,13 @@ struct AnnouncementBuilder {
                     : "Game, set and match, \(name). \(wg) games to \(lg)"
             }
         }
+    }
+
+    /// 播报用队员名：双打按语言连接（中文「、」、英文「and」），单打即本人。
+    private func spokenName(_ s: MatchState, _ side: Side, _ lang: AnnounceLanguage) -> String {
+        let players = s.config.players(for: side)
+        guard players.count > 1 else { return players.first ?? "" }
+        return players.joined(separator: lang == .chinese ? "、" : " and ")
     }
 
     // MARK: - 报分（发球方在前，只报数字）
