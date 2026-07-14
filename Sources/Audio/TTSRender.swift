@@ -53,6 +53,53 @@ enum TTSRender {
         return convertToStandard(raw)
     }
 
+    /// 分段混合渲染：把一句话按「中文 / 非中文」切段，中文段（如队名）用
+    /// `cjkVoice`、其余用 `primaryVoice`，各自渲染后拼成一个 buffer。
+    /// 用于英文播报里嵌中文队名——队名用中文嗓念出，其余保持英音。
+    /// 若全句同类（无需混合），直接单嗓渲染。
+    static func renderMixed(text: String,
+                            primaryVoice: AVSpeechSynthesisVoice,
+                            cjkVoice: AVSpeechSynthesisVoice,
+                            rate: Float,
+                            pitch: Float) async -> AVAudioPCMBuffer? {
+        let segments = splitByCJK(text)
+        if segments.count <= 1 {
+            let v = (segments.first?.isCJK ?? false) ? cjkVoice : primaryVoice
+            return await render(text: text, voice: v, rate: rate, pitch: pitch)
+        }
+        var buffers: [AVAudioPCMBuffer] = []
+        for seg in segments {
+            guard !seg.text.trimmingCharacters(in: .whitespaces).isEmpty else { continue }
+            let v = seg.isCJK ? cjkVoice : primaryVoice
+            if let b = await render(text: seg.text, voice: v, rate: rate, pitch: pitch) {
+                buffers.append(b)
+            }
+        }
+        return concat(buffers)
+    }
+
+    /// 按连续「中文 / 非中文」把字符串切成有序片段。
+    static func splitByCJK(_ text: String) -> [(text: String, isCJK: Bool)] {
+        var result: [(String, Bool)] = []
+        var current = ""
+        var currentIsCJK: Bool?
+        for ch in text {
+            let isCJK = String(ch).containsCJKText
+            if currentIsCJK == nil {
+                currentIsCJK = isCJK
+                current = String(ch)
+            } else if isCJK == currentIsCJK {
+                current.append(ch)
+            } else {
+                result.append((current, currentIsCJK!))
+                current = String(ch)
+                currentIsCJK = isCJK
+            }
+        }
+        if let c = currentIsCJK, !current.isEmpty { result.append((current, c)) }
+        return result
+    }
+
     /// 任意 PCM → 标准格式。
     static func convertToStandard(_ src: AVAudioPCMBuffer) -> AVAudioPCMBuffer? {
         guard src.frameLength > 0 else { return nil }

@@ -62,14 +62,23 @@ final class Announcer {
         playTask = Task { [weak self] in
             guard let self else { return }
             guard let voice = self.matchVoice() else { return }
-            let key = "\(text)|\(voice.identifier)"
+            // 英文播报里若出现中文（队名），队名那几个字用中文嗓念出，其余保持英音
+            let needsMix = self.language != .chinese && text.containsCJKText
+            let cjkVoice = needsMix ? Self.pickVoice(languageCode: "zh-CN", umpire: self.umpire) : nil
+            let key = "\(text)|\(voice.identifier)|\(cjkVoice?.identifier ?? "-")"
             var data = self.cache[key]
             if data == nil {
                 // 保持自然音高与接近正常的语速——改音高会让系统人声发音失真、
                 // 听感机械（中文尤甚）
-                guard let buffer = await TTSRender.render(text: text, voice: voice,
-                                                          rate: AVSpeechUtteranceDefaultSpeechRate * 0.94,
-                                                          pitch: 1.0) else { return }
+                let rate = AVSpeechUtteranceDefaultSpeechRate * 0.94
+                let buffer: AVAudioPCMBuffer?
+                if needsMix, let cjkVoice {
+                    buffer = await TTSRender.renderMixed(text: text, primaryVoice: voice,
+                                                         cjkVoice: cjkVoice, rate: rate, pitch: 1.0)
+                } else {
+                    buffer = await TTSRender.render(text: text, voice: voice, rate: rate, pitch: 1.0)
+                }
+                guard let buffer else { return }
                 data = await OfflineFX.bakeStadiumPAAsync(buffer)
                 if data == nil {   // 偶发失败：稍候重试一次
                     try? await Task.sleep(nanoseconds: 250_000_000)
