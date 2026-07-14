@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 /// 赛前设置：分三组——队伍、赛制、播报。全部有默认值，可直接开始。
 struct SetupView: View {
@@ -28,6 +29,23 @@ struct SetupView: View {
     private var nameLanguageMismatch: Bool {
         appModel.language == .english
             && (resolvedNameMe.containsCJKText || resolvedNameOpp.containsCJKText)
+    }
+
+    /// 当前实际会用到的裁判人声——让用户确认下载的增强/高级人声是否被选中。
+    private var currentVoice: AVSpeechSynthesisVoice? {
+        Announcer.pickVoice(languageCode: effectiveVoiceCode, umpire: appModel.umpire)
+    }
+    /// 当前人声是否为「标准」档（偏机械，需引导用户下载增强/高级）。
+    private var currentVoiceIsDefault: Bool {
+        guard let v = currentVoice else { return true }
+        return v.quality != .premium && v.quality != .enhanced
+    }
+    private func qualityLabel(_ v: AVSpeechSynthesisVoice) -> String {
+        switch v.quality {
+        case .premium:  return isChinese ? "高级" : "Premium"
+        case .enhanced: return isChinese ? "增强" : "Enhanced"
+        default:        return isChinese ? "标准" : "Default"
+        }
     }
 
     var body: some View {
@@ -88,20 +106,19 @@ struct SetupView: View {
                                 .font(.caption2)
                                 .foregroundStyle(.orange.opacity(0.85))
                         }
-                        if !Announcer.voiceAvailable(gender: appModel.umpire, languageCode: effectiveVoiceCode) {
-                            Label(isChinese
-                                  ? "当前未安装\(effectiveVoiceCode.hasPrefix("zh") ? "中文" : "英文")\(appModel.umpire == .male ? "男声" : "女声")，将用其他人声代替。可在 设置 → 辅助功能 → 朗读内容 → 声音 下载（离线可用）"
-                                  : "No \(appModel.umpire == .male ? "male" : "female") voice installed for this language — a fallback voice will be used. Download one in Settings → Accessibility → Spoken Content → Voices",
-                                  systemImage: "exclamationmark.triangle")
-                                .font(.caption2)
-                                .foregroundStyle(.orange.opacity(0.85))
-                        } else if !Announcer.hasEnhancedVoice(for: appModel.language) {
-                            Label(isChinese
-                                  ? "想要更真实的裁判人声：设置 → 辅助功能 → 朗读内容 → 声音，下载增强版人声（离线可用）"
-                                  : "For a more natural umpire voice: Settings → Accessibility → Spoken Content → Voices, download an Enhanced voice",
-                                  systemImage: "info.circle")
-                                .font(.caption2)
-                                .foregroundStyle(RexTheme.textFaint)
+                        if let v = currentVoice {
+                            Label {
+                                Text((isChinese ? "当前：" : "Now: ") + v.name + " · " + qualityLabel(v)
+                                     + (currentVoiceIsDefault
+                                        ? (isChinese
+                                           ? "。标准音质偏机械——在 设置→辅助功能→朗读内容→声音 下载增强/高级版（英式/美式均可）"
+                                           : ". Default is robotic — download an Enhanced/Premium voice in Settings → Accessibility → Spoken Content → Voices")
+                                        : (isChinese ? "（高音质人声）" : " (high quality)")))
+                            } icon: {
+                                Image(systemName: currentVoiceIsDefault ? "exclamationmark.triangle" : "checkmark.seal.fill")
+                            }
+                            .font(.caption2)
+                            .foregroundStyle(currentVoiceIsDefault ? .orange.opacity(0.85) : RexTheme.textDim)
                         }
                     }
 
