@@ -82,8 +82,10 @@ enum OfflineFX {
         }
     }
 
-    /// 现场 PA 报分：短延迟回声（喇叭反射）+ 球场混响 → WAV。
-    static func bakeStadiumPA(_ voice: AVAudioPCMBuffer) -> Data? {
+    /// 现场 PA 报分：短延迟回声（喇叭反射）+ 球场混响 + 人群底噪 → WAV。
+    /// emphatic=true（裁判喊话）时背景更轻；seed 决定底噪从环境音的哪个位置取起，
+    /// 让不同报分的背景各不相同。
+    static func bakeStadiumPA(_ voice: AVAudioPCMBuffer, emphatic: Bool, seed: Int) -> Data? {
         guard voice.frameLength > 0 else { return nil }
         let format = TTSRender.standardFormat
         let engine = AVAudioEngine()
@@ -118,11 +120,11 @@ enum OfflineFX {
         // 音量压得很低——底噪一响就露馅，宁可若有若无。循环 + 淡入淡出铺满整段。
         var bedPlayer: AVAudioPlayerNode?
         var bedBuffer: AVAudioPCMBuffer?
-        if let bed = ambienceBed(), let looped = loopedFaded(bed, seconds: totalDur) {
+        if let bed = ambienceBed(), let looped = loopedFaded(bed, seconds: totalDur, offsetSeed: seed) {
             let bp = AVAudioPlayerNode()
             engine.attach(bp)
             engine.connect(bp, to: engine.mainMixerNode, format: format)
-            bp.volume = 0.085
+            bp.volume = emphatic ? 0.05 : 0.09   // 裁判喊话时背景更轻，不盖喊话
             bedPlayer = bp
             bedBuffer = looped
         }
@@ -164,7 +166,7 @@ enum OfflineFX {
 
     /// 把底噪循环铺满 `seconds`：起始 0.5s 淡入，结尾 **2.0s 缓慢淡出**（平方曲线），
     /// 让背景音在报分念完后继续飘一会儿、逐渐消失，不与人声一起戛然而止。
-    private static func loopedFaded(_ src: AVAudioPCMBuffer, seconds: Double) -> AVAudioPCMBuffer? {
+    private static func loopedFaded(_ src: AVAudioPCMBuffer, seconds: Double, offsetSeed: Int = 0) -> AVAudioPCMBuffer? {
         let format = src.format
         let total = AVAudioFrameCount(seconds * format.sampleRate)
         guard src.frameLength > 0, total > 0,
@@ -174,9 +176,11 @@ enum OfflineFX {
         let srcLen = Int(src.frameLength)
         let n = Int(total)
         let ch = Int(format.channelCount)
+        // 起点偏移：不同报分从环境音不同位置取，避免每条背景千篇一律
+        let offset = ((offsetSeed % srcLen) + srcLen) % srcLen
         for c in 0..<ch {
             let s = sData[c], d = dData[c]
-            for i in 0..<n { d[i] = s[i % srcLen] }   // 循环填充
+            for i in 0..<n { d[i] = s[(i + offset) % srcLen] }   // 循环填充（带起点偏移）
         }
         let sr = format.sampleRate
         let fadeIn = min(Int(0.5 * sr), n / 2)
@@ -213,9 +217,9 @@ enum OfflineFX {
         }
     }
 
-    static func bakeStadiumPAAsync(_ voice: AVAudioPCMBuffer) async -> Data? {
+    static func bakeStadiumPAAsync(_ voice: AVAudioPCMBuffer, emphatic: Bool, seed: Int) async -> Data? {
         await withCheckedContinuation { cont in
-            bakeQueue.async { cont.resume(returning: bakeStadiumPA(voice)) }
+            bakeQueue.async { cont.resume(returning: bakeStadiumPA(voice, emphatic: emphatic, seed: seed)) }
         }
     }
 

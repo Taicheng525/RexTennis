@@ -83,10 +83,12 @@ final class Announcer {
                     buffer = await TTSRender.render(text: text, voice: voice, rate: rate, pitch: 1.0)
                 }
                 guard let buffer else { return }
-                data = await OfflineFX.bakeStadiumPAAsync(buffer)
+                // 用文案的稳定 hash 做背景起点偏移——不同比分的底噪从不同位置取，不再千篇一律
+                let seed = text.unicodeScalars.reduce(0) { $0 &+ Int($1.value) }
+                data = await OfflineFX.bakeStadiumPAAsync(buffer, emphatic: emphatic, seed: seed)
                 if data == nil {   // 偶发失败：稍候重试一次
                     try? await Task.sleep(nanoseconds: 250_000_000)
-                    data = await OfflineFX.bakeStadiumPAAsync(buffer)
+                    data = await OfflineFX.bakeStadiumPAAsync(buffer, emphatic: emphatic, seed: seed)
                 }
                 if let data {
                     if self.cache.count > 80 { self.cache.removeAll() }   // 粗粒度限容

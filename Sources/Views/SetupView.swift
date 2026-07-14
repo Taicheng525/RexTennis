@@ -1,18 +1,20 @@
 import SwiftUI
 
-/// 赛前设置：分三组——队伍、赛制、播报。全部有默认值，可直接开始。
-/// 每队 1-2 名队员：填 1 个是单打，填 2 个是双打（自动判断）。
+/// 赛前设置：顶部小胶囊切语言/声音；队伍卡（队名选填 + 1-2 名队员）；赛制卡。
+/// 每队填第 2 个名字即为双打，自动判断。
 struct SetupView: View {
     @EnvironmentObject private var appModel: AppModel
 
     @State private var targetGames: Int = 4
     @State private var firstServer: Side = .me
+    @State private var teamMe: String = SettingsStore.teamNameMe
+    @State private var teamOpp: String = SettingsStore.teamNameOpp
     @State private var me1: String = SettingsStore.playersMe.first ?? ""
     @State private var me2: String = SettingsStore.playersMe.count > 1 ? SettingsStore.playersMe[1] : ""
     @State private var opp1: String = SettingsStore.playersOpp.first ?? ""
     @State private var opp2: String = SettingsStore.playersOpp.count > 1 ? SettingsStore.playersOpp[1] : ""
 
-    private enum Field: Hashable { case me1, me2, opp1, opp2 }
+    private enum Field: Hashable { case teamMe, me1, me2, teamOpp, opp1, opp2 }
     @FocusState private var focused: Field?
 
     private var isChinese: Bool { appModel.language == .chinese }
@@ -27,8 +29,13 @@ struct SetupView: View {
         let a = [trimmed(opp1), trimmed(opp2)].filter { !$0.isEmpty }
         return a.isEmpty ? [isChinese ? "对方" : "Team B"] : a
     }
-    private var displayMe: String { resolvedPlayersMe.joined(separator: " / ") }
-    private var displayOpp: String { resolvedPlayersOpp.joined(separator: " / ") }
+    /// 首发选择器上显示的名字：有队名用队名，否则队员名。
+    private var displayMe: String {
+        let t = trimmed(teamMe); return t.isEmpty ? resolvedPlayersMe.joined(separator: " / ") : t
+    }
+    private var displayOpp: String {
+        let t = trimmed(teamOpp); return t.isEmpty ? resolvedPlayersOpp.joined(separator: " / ") : t
+    }
 
     var body: some View {
         ZStack {
@@ -37,17 +44,31 @@ struct SetupView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 16) {
                     titleBlock
-                        .padding(.top, 40)
-                        .padding(.bottom, 6)
+                        .padding(.top, 36)
 
-                    // ① 队伍（每队 1-2 人：填第 2 个名字即为双打）
+                    // 播报语言 / 裁判声音（小胶囊，点击切换；比赛中也能随时切）
+                    HStack(spacing: 10) {
+                        settingPill(isChinese ? "中文" : "English") {
+                            appModel.language = isChinese ? .english : .chinese
+                        }
+                        settingPill(isChinese ? (appModel.umpire == .female ? "♀ 女声" : "♂ 男声")
+                                              : (appModel.umpire == .female ? "♀ Female" : "♂ Male")) {
+                            appModel.umpire = appModel.umpire == .female ? .male : .female
+                        }
+                    }
+                    .padding(.bottom, 2)
+
+                    // ① 队伍（队名选填 + 1-2 名队员；填第 2 名即双打）
                     groupCard {
                         teamBlock(title: isChinese ? "我方" : "TEAM 1",
-                                  p1: $me1, p2: $me2, f1: .me1, f2: .me2)
+                                  team: $teamMe, p1: $me1, p2: $me2,
+                                  tf: .teamMe, f1: .me1, f2: .me2)
                         Rectangle().fill(RexTheme.hairline).frame(height: 1)
                         teamBlock(title: isChinese ? "对方" : "TEAM 2",
-                                  p1: $opp1, p2: $opp2, f1: .opp1, f2: .opp2)
-                        Text(isChinese ? "每队填第 2 个名字即为双打" : "Add a 2nd name for doubles")
+                                  team: $teamOpp, p1: $opp1, p2: $opp2,
+                                  tf: .teamOpp, f1: .opp1, f2: .opp2)
+                        Text(isChinese ? "队名选填；每队填第 2 个名字即为双打"
+                                       : "Team name optional; add a 2nd name for doubles")
                             .font(.caption2)
                             .foregroundStyle(RexTheme.textFaint)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -71,24 +92,6 @@ struct SetupView: View {
                         }
                     }
 
-                    // ③ 播报（语言 + 裁判声音）
-                    groupCard {
-                        inlineRow(isChinese ? "播报语言" : "LANGUAGE") {
-                            Picker("", selection: $appModel.language) {
-                                Text("中文").tag(AnnounceLanguage.chinese)
-                                Text("English").tag(AnnounceLanguage.english)
-                            }
-                            .pickerStyle(.segmented)
-                        }
-                        inlineRow(isChinese ? "裁判声音" : "UMPIRE VOICE") {
-                            Picker("", selection: $appModel.umpire) {
-                                Text(isChinese ? "女声" : "Female").tag(UmpireVoice.female)
-                                Text(isChinese ? "男声" : "Male").tag(UmpireVoice.male)
-                            }
-                            .pickerStyle(.segmented)
-                        }
-                    }
-
                     startButton
                         .padding(.top, 8)
                         .padding(.bottom, 30)
@@ -104,9 +107,9 @@ struct SetupView: View {
 
     private var titleBlock: some View {
         VStack(spacing: 10) {
-            TennisBall(size: 46)
+            TennisBall(size: 44)
             Text("RexTennis")
-                .font(.system(size: 36, weight: .bold, design: .serif))
+                .font(.system(size: 34, weight: .bold, design: .serif))
                 .foregroundStyle(RexTheme.text)
             Text(isChinese ? "蓝牙耳机 · 离线比分播报" : "OFFLINE SCORE ANNOUNCER")
                 .font(.system(size: 11, weight: .semibold))
@@ -115,11 +118,24 @@ struct SetupView: View {
         }
     }
 
-    // MARK: - 队伍输入（一队一块：标题 + 1-2 个队员名）
+    private func settingPill(_ label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(RexTheme.text)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(RexTheme.card, in: Capsule())
+                .overlay(Capsule().strokeBorder(RexTheme.hairline, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
 
-    private func teamBlock(title: String,
+    // MARK: - 队伍输入
+
+    private func teamBlock(title: String, team: Binding<String>,
                            p1: Binding<String>, p2: Binding<String>,
-                           f1: Field, f2: Field) -> some View {
+                           tf: Field, f1: Field, f2: Field) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 RoundedRectangle(cornerRadius: 2)
@@ -130,8 +146,11 @@ struct SetupView: View {
                     .tracking(1.6)
                     .foregroundStyle(RexTheme.textDim)
             }
-            nameField(isChinese ? "队员 1" : "Player 1", text: p1, field: f1)
-            nameField(isChinese ? "队员 2（选填）" : "Player 2 (optional)", text: p2, field: f2)
+            nameField(isChinese ? "队名（选填）" : "Team name (optional)", text: team, field: tf)
+            HStack(spacing: 8) {
+                nameField(isChinese ? "队员 1" : "Player 1", text: p1, field: f1)
+                nameField(isChinese ? "队员 2（选填）" : "Player 2 (optional)", text: p2, field: f2)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -144,7 +163,7 @@ struct SetupView: View {
             .focused($focused, equals: field)
             .submitLabel(.done)
             .autocorrectionDisabled()
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 13)
             .padding(.vertical, 11)
             .background(.black.opacity(0.30), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay(
@@ -180,10 +199,14 @@ struct SetupView: View {
         Button {
             focused = nil
             SettingsStore.language = appModel.language
+            SettingsStore.teamNameMe = trimmed(teamMe)
+            SettingsStore.teamNameOpp = trimmed(teamOpp)
             SettingsStore.playersMe = resolvedPlayersMe
             SettingsStore.playersOpp = resolvedPlayersOpp
             appModel.startMatch(config: MatchConfig(targetGames: targetGames,
                                                     firstServer: firstServer,
+                                                    teamNameMe: trimmed(teamMe),
+                                                    teamNameOpp: trimmed(teamOpp),
                                                     playersMe: resolvedPlayersMe,
                                                     playersOpp: resolvedPlayersOpp))
         } label: {
