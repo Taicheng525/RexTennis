@@ -1,9 +1,9 @@
 import SwiftUI
 
 /// 赛前设置。两张卡：
-/// - 「对阵」：单打/双打；每队可选加「队名」＋队员名。名字框右侧下拉可从已存名单快速选。
+/// - 「对阵」：单打/双打；每队可选加「队名」＋队员名。名字框右侧下拉可从名单快速选；
+///   顶部「管理名单」可批量录入队员名/队名。
 /// - 「比赛设置」：赛制 / 首发 / 播报语言 / 裁判声音，均带标签。
-/// 队名与队员名相互独立、都可留空。开赛时把填过的名字记入名单，下次直接选。
 struct SetupView: View {
     @EnvironmentObject private var appModel: AppModel
 
@@ -20,6 +20,7 @@ struct SetupView: View {
     @State private var opp2: String = SettingsStore.playersOpp.count > 1 ? SettingsStore.playersOpp[1] : ""
     @State private var playerRoster: [String] = SettingsStore.playerRoster
     @State private var teamRoster: [String] = SettingsStore.teamRoster
+    @State private var showRoster = false
 
     private enum Field: Hashable { case teamMe, me1, me2, teamOpp, opp1, opp2 }
     @FocusState private var focused: Field?
@@ -27,23 +28,24 @@ struct SetupView: View {
     private var isChinese: Bool { appModel.language == .chinese }
 
     private func trimmed(_ s: String) -> String { s.trimmingCharacters(in: .whitespaces) }
-    private func teamDefault(_ side: Side) -> String {
-        side == .me ? (isChinese ? "队伍 1" : "Team 1") : (isChinese ? "队伍 2" : "Team 2")
+    /// 没填任何名字时的中性球员默认名（不是队名）。
+    private func playerDefault(_ side: Side) -> String {
+        side == .me ? (isChinese ? "选手 1" : "Player 1") : (isChinese ? "选手 2" : "Player 2")
     }
 
     private var resolvedPlayersMe: [String] {
         var a = [trimmed(me1)]; if isDoubles { a.append(trimmed(me2)) }
         let f = a.filter { !$0.isEmpty }
-        return f.isEmpty ? [teamDefault(.me)] : f
+        return f.isEmpty ? [playerDefault(.me)] : f
     }
     private var resolvedPlayersOpp: [String] {
         var a = [trimmed(opp1)]; if isDoubles { a.append(trimmed(opp2)) }
         let f = a.filter { !$0.isEmpty }
-        return f.isEmpty ? [teamDefault(.opponent)] : f
+        return f.isEmpty ? [playerDefault(.opponent)] : f
     }
-    /// 首发选择器上的短标识：有队名用队名，否则中立的「队伍 1 / 队伍 2」。
-    private var labelMe: String { trimmed(teamMe).isEmpty ? teamDefault(.me) : trimmed(teamMe) }
-    private var labelOpp: String { trimmed(teamOpp).isEmpty ? teamDefault(.opponent) : trimmed(teamOpp) }
+    /// 首发选择器上的短标识：有队名用队名，否则用队员名（没填则中性「选手 1/2」）。
+    private var labelMe: String { trimmed(teamMe).isEmpty ? resolvedPlayersMe.joined(separator: " / ") : trimmed(teamMe) }
+    private var labelOpp: String { trimmed(teamOpp).isEmpty ? resolvedPlayersOpp.joined(separator: " / ") : trimmed(teamOpp) }
 
     var body: some View {
         ZStack {
@@ -57,6 +59,17 @@ struct SetupView: View {
 
                     // ① 对阵
                     groupCard(isChinese ? "对阵" : "MATCH-UP") {
+                        HStack {
+                            Spacer()
+                            Button { showRoster = true } label: {
+                                Label(isChinese ? "管理名单" : "Roster",
+                                      systemImage: "person.2.crop.square.stack.fill")
+                                    .font(.caption.weight(.medium))
+                                    .foregroundStyle(RexTheme.accent)
+                            }
+                            .buttonStyle(.plain)
+                        }
+
                         Picker("", selection: $isDoubles.animation(.snappy(duration: 0.2))) {
                             Text(isChinese ? "单打" : "Singles").tag(false)
                             Text(isChinese ? "双打" : "Doubles").tag(true)
@@ -113,6 +126,12 @@ struct SetupView: View {
             .scrollDismissesKeyboard(.interactively)
         }
         .tint(RexTheme.accent)
+        .sheet(isPresented: $showRoster, onDismiss: {
+            playerRoster = SettingsStore.playerRoster
+            teamRoster = SettingsStore.teamRoster
+        }) {
+            RosterEditorView(isChinese: isChinese)
+        }
     }
 
     // MARK: - 标题
