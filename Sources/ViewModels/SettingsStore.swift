@@ -6,6 +6,9 @@ enum SettingsStore {
     private static let umpireKey = "rex.umpireVoice"
     private static let playersMeKey = "rex.playersMe"
     private static let playersOppKey = "rex.playersOpp"
+    private static let teamNameMeKey = "rex.teamNameMe"
+    private static let teamNameOppKey = "rex.teamNameOpp"
+    private static let doublesKey = "rex.isDoubles"
 
     static var language: AnnounceLanguage {
         get {
@@ -35,5 +38,18 @@ enum SettingsStore {
     static var playersOpp: [String] {
         get { UserDefaults.standard.stringArray(forKey: playersOppKey) ?? [] }
         set { UserDefaults.standard.set(newValue, forKey: playersOppKey) }
+    }
+
+    static var teamNameMe: String {
+        get { UserDefaults.standard.string(forKey: teamNameMeKey) ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: teamNameMeKey) }
+    }
+    static var teamNameOpp: String {
+        get { UserDefaults.standard.string(forKey: teamNameOppKey) ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: teamNameOppKey) }
+    }
+    static var isDoubles: Bool {
+        get { UserDefaults.standard.bool(forKey: doublesKey) }
+        set { UserDefaults.standard.set(newValue, forKey: doublesKey) }
     }
 }
