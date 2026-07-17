@@ -302,6 +302,18 @@ final class ScoreEngineTests: XCTestCase {
                        "该闪电队，李四发球")
     }
 
+    func testDoublesFirstServerPlayerSelectable() {
+        // 双打：赛前可指定首发队伍里第 2 位队员（索引 1）先发球
+        let config = MatchConfig(targetGames: 4, firstServer: .me, firstServerPlayer: 1,
+                                 playersMe: ["张三", "李四"], playersOpp: ["Smith", "Jones"])
+        let s = MatchState(config: config)
+        XCTAssertEqual(s.serverPlayerIndex(for: .me), 1)
+        XCTAssertEqual(s.serverPlayerIndex(for: .opponent), 0)
+        let builder = AnnouncementBuilder()
+        XCTAssertEqual(builder.utterance(for: [.serveChange(.me)], state: s, language: .chinese),
+                       "该李四发球")
+    }
+
     func testDoublesServerPlayerAlternates() {
         var s = MatchState(config: MatchConfig(targetGames: 6, firstServer: .me,
                                                playersMe: ["A1", "A2"], playersOpp: ["B1", "B2"]))

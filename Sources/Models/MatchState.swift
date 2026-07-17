@@ -41,6 +41,9 @@ struct MatchState: Equatable, Codable {
     init(config: MatchConfig) {
         self.config = config
         self.server = config.firstServer
+        // 双打：首发队伍按赛前选择决定先发的队员（单打恒 0）
+        if config.firstServer == .me { self.serverPlayerMe = config.firstServerPlayer }
+        else { self.serverPlayerOpp = config.firstServerPlayer }
     }
 }
 
