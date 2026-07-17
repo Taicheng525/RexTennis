@@ -34,16 +34,9 @@ struct MatchState: Equatable, Codable {
     /// 本盘是否由抢七决出（用于胜盘播报「抢七拿下本盘」）。
     var finishedByTiebreak: Bool = false
 
-    /// 双打时各队「下一位发球队员」索引（0/1，队内交替）；单打恒为 0。
-    var serverPlayerMe: Int = 0
-    var serverPlayerOpp: Int = 0
-
     init(config: MatchConfig) {
         self.config = config
         self.server = config.firstServer
-        // 双打：首发队伍按赛前选择决定先发的队员（单打恒 0）
-        if config.firstServer == .me { self.serverPlayerMe = config.firstServerPlayer }
-        else { self.serverPlayerOpp = config.firstServerPlayer }
     }
 }
 
@@ -68,15 +61,6 @@ extension MatchState {
 
     /// 某一方本盘已赢局数。
     func games(for side: Side) -> Int { side == .me ? gamesMe : gamesOpp }
-
-    /// 某一方当前发球队员索引（双打 0/1，单打恒 0）。
-    func serverPlayerIndex(for side: Side) -> Int { side == .me ? serverPlayerMe : serverPlayerOpp }
-
-    /// 该队发完一个发球局后，队内换下一位发球（双打交替）。
-    mutating func advanceServerPlayer(for side: Side) {
-        if side == .me { serverPlayerMe = (serverPlayerMe + 1) % 2 }
-        else { serverPlayerOpp = (serverPlayerOpp + 1) % 2 }
-    }
 
     /// 某一方抢七得分。
     func tiebreakPoints(for side: Side) -> Int { side == .me ? tbMe : tbOpp }

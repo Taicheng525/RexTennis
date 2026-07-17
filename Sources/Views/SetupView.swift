@@ -9,7 +9,6 @@ struct SetupView: View {
 
     @State private var targetGames: Int = 4
     @State private var firstServer: Side = .me
-    @State private var firstServerPlayer: Int = 0
     @State private var isDoubles: Bool = SettingsStore.isDoubles
     @State private var teamMe: String = SettingsStore.teamNameMe
     @State private var teamOpp: String = SettingsStore.teamNameOpp
@@ -48,11 +47,6 @@ struct SetupView: View {
     /// 首发选择器上的短标识：有队名用队名，否则用队员名（没填则中性「选手 1/2」）。
     private var labelMe: String { trimmed(teamMe).isEmpty ? resolvedPlayersMe.joined(separator: " / ") : trimmed(teamMe) }
     private var labelOpp: String { trimmed(teamOpp).isEmpty ? resolvedPlayersOpp.joined(separator: " / ") : trimmed(teamOpp) }
-    /// 首发那一队的两名队员名（双打「首发队员」选择器用）。
-    private var firstServerNames: (String, String) {
-        let p = firstServer == .me ? resolvedPlayersMe : resolvedPlayersOpp
-        return (p.first ?? "选手 1", p.count > 1 ? p[1] : "选手 2")
-    }
 
     var body: some View {
         ZStack {
@@ -107,15 +101,6 @@ struct SetupView: View {
                                 Text(labelOpp).tag(Side.opponent)
                             }
                             .pickerStyle(.segmented)
-                        }
-                        if isDoubles {
-                            inlineRow(isChinese ? "首发队员" : "SERVING FIRST") {
-                                Picker("", selection: $firstServerPlayer) {
-                                    Text(firstServerNames.0).tag(0)
-                                    Text(firstServerNames.1).tag(1)
-                                }
-                                .pickerStyle(.segmented)
-                            }
                         }
                         inlineRow(isChinese ? "播报语言" : "ANNOUNCE IN") {
                             Picker("", selection: $appModel.language) {
@@ -288,7 +273,6 @@ struct SetupView: View {
             SettingsStore.remember(teams: [teamMe, teamOpp].map(trimmed).filter { !$0.isEmpty })
             appModel.startMatch(config: MatchConfig(targetGames: targetGames,
                                                     firstServer: firstServer,
-                                                    firstServerPlayer: isDoubles ? firstServerPlayer : 0,
                                                     teamNameMe: trimmed(teamMe),
                                                     teamNameOpp: trimmed(teamOpp),
                                                     playersMe: resolvedPlayersMe,

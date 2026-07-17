@@ -95,14 +95,13 @@ struct AnnouncementBuilder {
         return players.joined(separator: lang == .chinese ? "、" : " and ")
     }
 
-    /// 发球播报名：队名（若有）+ 当前发球队员（双打只报发球那一位，避免「队名+两人」过长）。
+    /// 发球播报名：队名（若有）+ 该队**全部**队员名。双打报两人（「张三、李四」/
+    /// 「Smith and Jones」）——具体谁发球双打可随时换，硬报单人会出错；单打即本人。
     private func serverSpokenName(_ s: MatchState, _ side: Side, _ lang: AnnounceLanguage) -> String {
-        let players = s.config.players(for: side)
-        let idx = min(max(0, s.serverPlayerIndex(for: side)), players.count - 1)
-        let player = players.isEmpty ? "" : players[idx]
+        let names = spokenName(s, side, lang)
         let tn = s.config.teamName(for: side)
-        if tn.isEmpty { return player }
-        return lang == .chinese ? "\(tn)，\(player)" : "\(tn), \(player)"
+        if tn.isEmpty { return names }
+        return lang == .chinese ? "\(tn)，\(names)" : "\(tn), \(names)"
     }
 
     // MARK: - 报分（发球方在前，只报数字）

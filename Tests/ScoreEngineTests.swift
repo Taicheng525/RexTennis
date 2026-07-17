@@ -277,9 +277,9 @@ final class ScoreEngineTests: XCTestCase {
         // 双打局末：两名队员用顿号连接（队赢了，报两人）
         XCTAssertEqual(builder.utterance(for: [.gameWon(.me)], state: s, language: .chinese),
                        "张三、李四拿下这一局，局分1比0")
-        // 双打发球：只报当前发球队员（默认索引 0 = Smith），不报两人
+        // 双打发球：报两名队员（具体谁发球双打可换，不单报一人）
         XCTAssertEqual(builder.utterance(for: [.serveChange(.opponent)], state: s, language: .english),
-                       "Smith to serve")
+                       "Smith and Jones to serve")
     }
 
     func testAnnouncementTeamNameAndServer() {
@@ -292,41 +292,9 @@ final class ScoreEngineTests: XCTestCase {
         // 局末只报队员名（队名只在发球时报，避免英文播报嵌中文队名卡顿）
         XCTAssertEqual(builder.utterance(for: [.gameWon(.me)], state: s, language: .chinese),
                        "张三、李四拿下这一局，局分1比0")
-        // 发球：队名 + 当前发球队员（索引 0 = 张三）
-        s.serverPlayerMe = 0
+        // 发球：队名 + 两名队员都报（双打不单报一人）
         XCTAssertEqual(builder.utterance(for: [.serveChange(.me)], state: s, language: .chinese),
-                       "该闪电队，张三发球")
-        // 队内换人：索引 1 = 李四
-        s.serverPlayerMe = 1
-        XCTAssertEqual(builder.utterance(for: [.serveChange(.me)], state: s, language: .chinese),
-                       "该闪电队，李四发球")
-    }
-
-    func testDoublesFirstServerPlayerSelectable() {
-        // 双打：赛前可指定首发队伍里第 2 位队员（索引 1）先发球
-        let config = MatchConfig(targetGames: 4, firstServer: .me, firstServerPlayer: 1,
-                                 playersMe: ["张三", "李四"], playersOpp: ["Smith", "Jones"])
-        let s = MatchState(config: config)
-        XCTAssertEqual(s.serverPlayerIndex(for: .me), 1)
-        XCTAssertEqual(s.serverPlayerIndex(for: .opponent), 0)
-        let builder = AnnouncementBuilder()
-        XCTAssertEqual(builder.utterance(for: [.serveChange(.me)], state: s, language: .chinese),
-                       "该李四发球")
-    }
-
-    func testDoublesServerPlayerAlternates() {
-        var s = MatchState(config: MatchConfig(targetGames: 6, firstServer: .me,
-                                               playersMe: ["A1", "A2"], playersOpp: ["B1", "B2"]))
-        // 我方发第 1 局并直落 4 分拿下
-        for _ in 0..<4 { ScoreEngine.applyPoint(.me, to: &s) }
-        XCTAssertEqual(s.server, .opponent)      // 换对方发球
-        XCTAssertEqual(s.serverPlayerMe, 1)      // 我方下次发球换 A2
-        XCTAssertEqual(s.serverPlayerOpp, 0)     // 对方本局用 B1
-        // 对方发第 2 局并拿下
-        for _ in 0..<4 { ScoreEngine.applyPoint(.opponent, to: &s) }
-        XCTAssertEqual(s.server, .me)
-        XCTAssertEqual(s.serverPlayerOpp, 1)     // 对方下次换 B2
-        XCTAssertEqual(s.serverPlayerIndex(for: .me), 1)   // 第 3 局我方由 A2 发
+                       "该闪电队，张三、李四发球")
     }
 
     func testAnnouncementGameAndSet_zh() {

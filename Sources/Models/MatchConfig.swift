@@ -31,8 +31,6 @@ struct MatchConfig: Equatable, Codable {
     var targetGames: Int
     /// 首个发球方。
     var firstServer: Side
-    /// 双打时首发队伍中**先发球的队员索引**（0 = 队员 1，1 = 队员 2）；单打无意义（恒 0）。
-    var firstServerPlayer: Int
     /// 队名（选填，与队员名相互独立）。非空时作为该队的显示/播报名。
     var teamNameMe: String
     var teamNameOpp: String
@@ -40,12 +38,11 @@ struct MatchConfig: Equatable, Codable {
     var playersMe: [String]
     var playersOpp: [String]
 
-    init(targetGames: Int, firstServer: Side, firstServerPlayer: Int = 0,
+    init(targetGames: Int, firstServer: Side,
          teamNameMe: String = "", teamNameOpp: String = "",
          playersMe: [String] = ["我方"], playersOpp: [String] = ["对方"]) {
         self.targetGames = targetGames
         self.firstServer = firstServer
-        self.firstServerPlayer = firstServerPlayer
         self.teamNameMe = teamNameMe
         self.teamNameOpp = teamNameOpp
         self.playersMe = playersMe.isEmpty ? ["我方"] : playersMe
