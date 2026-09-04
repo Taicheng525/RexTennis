@@ -22,6 +22,12 @@ targets:
       - path: Sources
       - path: Resources
         buildPhase: resources
+        excludes:
+          - Voices
+      # 内置裁判人声：按 语言_性别 子目录整目录打包（folder reference），运行时按子目录取文件
+      - path: Resources/Voices
+        type: folder
+        buildPhase: resources
     info:
       path: Sources/Info.plist
       properties:
@@ -29,6 +35,8 @@ targets:
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"
         UILaunchScreen: {}
+        # App 完全离线、不含自定义加密：声明后每次上传 TestFlight/App Store 不再弹「出口合规」问卷
+        ITSAppUsesNonExemptEncryption: false
         UIBackgroundModes:
           - audio
         UISupportedInterfaceOrientations:

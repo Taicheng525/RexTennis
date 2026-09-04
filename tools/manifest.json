@@ -1,0 +1,1652 @@
+[
+  {
+    "en" : "love all",
+    "id" : "score_0_0",
+    "zh" : "零平"
+  },
+  {
+    "en" : "love fifteen",
+    "id" : "score_0_1",
+    "zh" : "零比十五"
+  },
+  {
+    "en" : "love thirty",
+    "id" : "score_0_2",
+    "zh" : "零比三十"
+  },
+  {
+    "en" : "love forty",
+    "id" : "score_0_3",
+    "zh" : "零比四十"
+  },
+  {
+    "en" : "fifteen love",
+    "id" : "score_1_0",
+    "zh" : "十五比零"
+  },
+  {
+    "en" : "fifteen all",
+    "id" : "score_1_1",
+    "zh" : "十五平"
+  },
+  {
+    "en" : "fifteen thirty",
+    "id" : "score_1_2",
+    "zh" : "十五比三十"
+  },
+  {
+    "en" : "fifteen forty",
+    "id" : "score_1_3",
+    "zh" : "十五比四十"
+  },
+  {
+    "en" : "thirty love",
+    "id" : "score_2_0",
+    "zh" : "三十比零"
+  },
+  {
+    "en" : "thirty fifteen",
+    "id" : "score_2_1",
+    "zh" : "三十比十五"
+  },
+  {
+    "en" : "thirty all",
+    "id" : "score_2_2",
+    "zh" : "三十平"
+  },
+  {
+    "en" : "thirty forty",
+    "id" : "score_2_3",
+    "zh" : "三十比四十"
+  },
+  {
+    "en" : "forty love",
+    "id" : "score_3_0",
+    "zh" : "四十比零"
+  },
+  {
+    "en" : "forty fifteen",
+    "id" : "score_3_1",
+    "zh" : "四十比十五"
+  },
+  {
+    "en" : "forty thirty",
+    "id" : "score_3_2",
+    "zh" : "四十比三十"
+  },
+  {
+    "en" : "forty all",
+    "id" : "score_3_3",
+    "zh" : "四十平"
+  },
+  {
+    "en" : "Deuce, deciding point",
+    "id" : "deuce",
+    "zh" : "平分，金球"
+  },
+  {
+    "en" : "Game to us. Games 1 0",
+    "id" : "game_me_1_0",
+    "zh" : "我方拿下这一局，局分1比0"
+  },
+  {
+    "en" : "Game to us. Games 1 1",
+    "id" : "game_me_1_1",
+    "zh" : "我方拿下这一局，局分1比1"
+  },
+  {
+    "en" : "Game to us. Games 1 2",
+    "id" : "game_me_1_2",
+    "zh" : "我方拿下这一局，局分1比2"
+  },
+  {
+    "en" : "Game to us. Games 1 3",
+    "id" : "game_me_1_3",
+    "zh" : "我方拿下这一局，局分1比3"
+  },
+  {
+    "en" : "Game to us. Games 1 4",
+    "id" : "game_me_1_4",
+    "zh" : "我方拿下这一局，局分1比4"
+  },
+  {
+    "en" : "Game to us. Games 1 5",
+    "id" : "game_me_1_5",
+    "zh" : "我方拿下这一局，局分1比5"
+  },
+  {
+    "en" : "Game to us. Games 1 6",
+    "id" : "game_me_1_6",
+    "zh" : "我方拿下这一局，局分1比6"
+  },
+  {
+    "en" : "Game to us. Games 1 7",
+    "id" : "game_me_1_7",
+    "zh" : "我方拿下这一局，局分1比7"
+  },
+  {
+    "en" : "Game to us. Games 2 0",
+    "id" : "game_me_2_0",
+    "zh" : "我方拿下这一局，局分2比0"
+  },
+  {
+    "en" : "Game to us. Games 2 1",
+    "id" : "game_me_2_1",
+    "zh" : "我方拿下这一局，局分2比1"
+  },
+  {
+    "en" : "Game to us. Games 2 2",
+    "id" : "game_me_2_2",
+    "zh" : "我方拿下这一局，局分2比2"
+  },
+  {
+    "en" : "Game to us. Games 2 3",
+    "id" : "game_me_2_3",
+    "zh" : "我方拿下这一局，局分2比3"
+  },
+  {
+    "en" : "Game to us. Games 2 4",
+    "id" : "game_me_2_4",
+    "zh" : "我方拿下这一局，局分2比4"
+  },
+  {
+    "en" : "Game to us. Games 2 5",
+    "id" : "game_me_2_5",
+    "zh" : "我方拿下这一局，局分2比5"
+  },
+  {
+    "en" : "Game to us. Games 2 6",
+    "id" : "game_me_2_6",
+    "zh" : "我方拿下这一局，局分2比6"
+  },
+  {
+    "en" : "Game to us. Games 2 7",
+    "id" : "game_me_2_7",
+    "zh" : "我方拿下这一局，局分2比7"
+  },
+  {
+    "en" : "Game to us. Games 3 0",
+    "id" : "game_me_3_0",
+    "zh" : "我方拿下这一局，局分3比0"
+  },
+  {
+    "en" : "Game to us. Games 3 1",
+    "id" : "game_me_3_1",
+    "zh" : "我方拿下这一局，局分3比1"
+  },
+  {
+    "en" : "Game to us. Games 3 2",
+    "id" : "game_me_3_2",
+    "zh" : "我方拿下这一局，局分3比2"
+  },
+  {
+    "en" : "Game to us. Games 3 3",
+    "id" : "game_me_3_3",
+    "zh" : "我方拿下这一局，局分3比3"
+  },
+  {
+    "en" : "Game to us. Games 3 4",
+    "id" : "game_me_3_4",
+    "zh" : "我方拿下这一局，局分3比4"
+  },
+  {
+    "en" : "Game to us. Games 3 5",
+    "id" : "game_me_3_5",
+    "zh" : "我方拿下这一局，局分3比5"
+  },
+  {
+    "en" : "Game to us. Games 3 6",
+    "id" : "game_me_3_6",
+    "zh" : "我方拿下这一局，局分3比6"
+  },
+  {
+    "en" : "Game to us. Games 3 7",
+    "id" : "game_me_3_7",
+    "zh" : "我方拿下这一局，局分3比7"
+  },
+  {
+    "en" : "Game to us. Games 4 0",
+    "id" : "game_me_4_0",
+    "zh" : "我方拿下这一局，局分4比0"
+  },
+  {
+    "en" : "Game to us. Games 4 1",
+    "id" : "game_me_4_1",
+    "zh" : "我方拿下这一局，局分4比1"
+  },
+  {
+    "en" : "Game to us. Games 4 2",
+    "id" : "game_me_4_2",
+    "zh" : "我方拿下这一局，局分4比2"
+  },
+  {
+    "en" : "Game to us. Games 4 3",
+    "id" : "game_me_4_3",
+    "zh" : "我方拿下这一局，局分4比3"
+  },
+  {
+    "en" : "Game to us. Games 4 4",
+    "id" : "game_me_4_4",
+    "zh" : "我方拿下这一局，局分4比4"
+  },
+  {
+    "en" : "Game to us. Games 4 5",
+    "id" : "game_me_4_5",
+    "zh" : "我方拿下这一局，局分4比5"
+  },
+  {
+    "en" : "Game to us. Games 4 6",
+    "id" : "game_me_4_6",
+    "zh" : "我方拿下这一局，局分4比6"
+  },
+  {
+    "en" : "Game to us. Games 4 7",
+    "id" : "game_me_4_7",
+    "zh" : "我方拿下这一局，局分4比7"
+  },
+  {
+    "en" : "Game to us. Games 5 0",
+    "id" : "game_me_5_0",
+    "zh" : "我方拿下这一局，局分5比0"
+  },
+  {
+    "en" : "Game to us. Games 5 1",
+    "id" : "game_me_5_1",
+    "zh" : "我方拿下这一局，局分5比1"
+  },
+  {
+    "en" : "Game to us. Games 5 2",
+    "id" : "game_me_5_2",
+    "zh" : "我方拿下这一局，局分5比2"
+  },
+  {
+    "en" : "Game to us. Games 5 3",
+    "id" : "game_me_5_3",
+    "zh" : "我方拿下这一局，局分5比3"
+  },
+  {
+    "en" : "Game to us. Games 5 4",
+    "id" : "game_me_5_4",
+    "zh" : "我方拿下这一局，局分5比4"
+  },
+  {
+    "en" : "Game to us. Games 5 5",
+    "id" : "game_me_5_5",
+    "zh" : "我方拿下这一局，局分5比5"
+  },
+  {
+    "en" : "Game to us. Games 5 6",
+    "id" : "game_me_5_6",
+    "zh" : "我方拿下这一局，局分5比6"
+  },
+  {
+    "en" : "Game to us. Games 5 7",
+    "id" : "game_me_5_7",
+    "zh" : "我方拿下这一局，局分5比7"
+  },
+  {
+    "en" : "Game to us. Games 6 0",
+    "id" : "game_me_6_0",
+    "zh" : "我方拿下这一局，局分6比0"
+  },
+  {
+    "en" : "Game to us. Games 6 1",
+    "id" : "game_me_6_1",
+    "zh" : "我方拿下这一局，局分6比1"
+  },
+  {
+    "en" : "Game to us. Games 6 2",
+    "id" : "game_me_6_2",
+    "zh" : "我方拿下这一局，局分6比2"
+  },
+  {
+    "en" : "Game to us. Games 6 3",
+    "id" : "game_me_6_3",
+    "zh" : "我方拿下这一局，局分6比3"
+  },
+  {
+    "en" : "Game to us. Games 6 4",
+    "id" : "game_me_6_4",
+    "zh" : "我方拿下这一局，局分6比4"
+  },
+  {
+    "en" : "Game to us. Games 6 5",
+    "id" : "game_me_6_5",
+    "zh" : "我方拿下这一局，局分6比5"
+  },
+  {
+    "en" : "Game to us. Games 6 6",
+    "id" : "game_me_6_6",
+    "zh" : "我方拿下这一局，局分6比6"
+  },
+  {
+    "en" : "Game to us. Games 6 7",
+    "id" : "game_me_6_7",
+    "zh" : "我方拿下这一局，局分6比7"
+  },
+  {
+    "en" : "Game to us. Games 7 0",
+    "id" : "game_me_7_0",
+    "zh" : "我方拿下这一局，局分7比0"
+  },
+  {
+    "en" : "Game to us. Games 7 1",
+    "id" : "game_me_7_1",
+    "zh" : "我方拿下这一局，局分7比1"
+  },
+  {
+    "en" : "Game to us. Games 7 2",
+    "id" : "game_me_7_2",
+    "zh" : "我方拿下这一局，局分7比2"
+  },
+  {
+    "en" : "Game to us. Games 7 3",
+    "id" : "game_me_7_3",
+    "zh" : "我方拿下这一局，局分7比3"
+  },
+  {
+    "en" : "Game to us. Games 7 4",
+    "id" : "game_me_7_4",
+    "zh" : "我方拿下这一局，局分7比4"
+  },
+  {
+    "en" : "Game to us. Games 7 5",
+    "id" : "game_me_7_5",
+    "zh" : "我方拿下这一局，局分7比5"
+  },
+  {
+    "en" : "Game to us. Games 7 6",
+    "id" : "game_me_7_6",
+    "zh" : "我方拿下这一局，局分7比6"
+  },
+  {
+    "en" : "Game to us. Games 7 7",
+    "id" : "game_me_7_7",
+    "zh" : "我方拿下这一局，局分7比7"
+  },
+  {
+    "en" : "Game to them. Games 1 0",
+    "id" : "game_opponent_1_0",
+    "zh" : "对方拿下这一局，局分1比0"
+  },
+  {
+    "en" : "Game to them. Games 1 1",
+    "id" : "game_opponent_1_1",
+    "zh" : "对方拿下这一局，局分1比1"
+  },
+  {
+    "en" : "Game to them. Games 1 2",
+    "id" : "game_opponent_1_2",
+    "zh" : "对方拿下这一局，局分1比2"
+  },
+  {
+    "en" : "Game to them. Games 1 3",
+    "id" : "game_opponent_1_3",
+    "zh" : "对方拿下这一局，局分1比3"
+  },
+  {
+    "en" : "Game to them. Games 1 4",
+    "id" : "game_opponent_1_4",
+    "zh" : "对方拿下这一局，局分1比4"
+  },
+  {
+    "en" : "Game to them. Games 1 5",
+    "id" : "game_opponent_1_5",
+    "zh" : "对方拿下这一局，局分1比5"
+  },
+  {
+    "en" : "Game to them. Games 1 6",
+    "id" : "game_opponent_1_6",
+    "zh" : "对方拿下这一局，局分1比6"
+  },
+  {
+    "en" : "Game to them. Games 1 7",
+    "id" : "game_opponent_1_7",
+    "zh" : "对方拿下这一局，局分1比7"
+  },
+  {
+    "en" : "Game to them. Games 2 0",
+    "id" : "game_opponent_2_0",
+    "zh" : "对方拿下这一局，局分2比0"
+  },
+  {
+    "en" : "Game to them. Games 2 1",
+    "id" : "game_opponent_2_1",
+    "zh" : "对方拿下这一局，局分2比1"
+  },
+  {
+    "en" : "Game to them. Games 2 2",
+    "id" : "game_opponent_2_2",
+    "zh" : "对方拿下这一局，局分2比2"
+  },
+  {
+    "en" : "Game to them. Games 2 3",
+    "id" : "game_opponent_2_3",
+    "zh" : "对方拿下这一局，局分2比3"
+  },
+  {
+    "en" : "Game to them. Games 2 4",
+    "id" : "game_opponent_2_4",
+    "zh" : "对方拿下这一局，局分2比4"
+  },
+  {
+    "en" : "Game to them. Games 2 5",
+    "id" : "game_opponent_2_5",
+    "zh" : "对方拿下这一局，局分2比5"
+  },
+  {
+    "en" : "Game to them. Games 2 6",
+    "id" : "game_opponent_2_6",
+    "zh" : "对方拿下这一局，局分2比6"
+  },
+  {
+    "en" : "Game to them. Games 2 7",
+    "id" : "game_opponent_2_7",
+    "zh" : "对方拿下这一局，局分2比7"
+  },
+  {
+    "en" : "Game to them. Games 3 0",
+    "id" : "game_opponent_3_0",
+    "zh" : "对方拿下这一局，局分3比0"
+  },
+  {
+    "en" : "Game to them. Games 3 1",
+    "id" : "game_opponent_3_1",
+    "zh" : "对方拿下这一局，局分3比1"
+  },
+  {
+    "en" : "Game to them. Games 3 2",
+    "id" : "game_opponent_3_2",
+    "zh" : "对方拿下这一局，局分3比2"
+  },
+  {
+    "en" : "Game to them. Games 3 3",
+    "id" : "game_opponent_3_3",
+    "zh" : "对方拿下这一局，局分3比3"
+  },
+  {
+    "en" : "Game to them. Games 3 4",
+    "id" : "game_opponent_3_4",
+    "zh" : "对方拿下这一局，局分3比4"
+  },
+  {
+    "en" : "Game to them. Games 3 5",
+    "id" : "game_opponent_3_5",
+    "zh" : "对方拿下这一局，局分3比5"
+  },
+  {
+    "en" : "Game to them. Games 3 6",
+    "id" : "game_opponent_3_6",
+    "zh" : "对方拿下这一局，局分3比6"
+  },
+  {
+    "en" : "Game to them. Games 3 7",
+    "id" : "game_opponent_3_7",
+    "zh" : "对方拿下这一局，局分3比7"
+  },
+  {
+    "en" : "Game to them. Games 4 0",
+    "id" : "game_opponent_4_0",
+    "zh" : "对方拿下这一局，局分4比0"
+  },
+  {
+    "en" : "Game to them. Games 4 1",
+    "id" : "game_opponent_4_1",
+    "zh" : "对方拿下这一局，局分4比1"
+  },
+  {
+    "en" : "Game to them. Games 4 2",
+    "id" : "game_opponent_4_2",
+    "zh" : "对方拿下这一局，局分4比2"
+  },
+  {
+    "en" : "Game to them. Games 4 3",
+    "id" : "game_opponent_4_3",
+    "zh" : "对方拿下这一局，局分4比3"
+  },
+  {
+    "en" : "Game to them. Games 4 4",
+    "id" : "game_opponent_4_4",
+    "zh" : "对方拿下这一局，局分4比4"
+  },
+  {
+    "en" : "Game to them. Games 4 5",
+    "id" : "game_opponent_4_5",
+    "zh" : "对方拿下这一局，局分4比5"
+  },
+  {
+    "en" : "Game to them. Games 4 6",
+    "id" : "game_opponent_4_6",
+    "zh" : "对方拿下这一局，局分4比6"
+  },
+  {
+    "en" : "Game to them. Games 4 7",
+    "id" : "game_opponent_4_7",
+    "zh" : "对方拿下这一局，局分4比7"
+  },
+  {
+    "en" : "Game to them. Games 5 0",
+    "id" : "game_opponent_5_0",
+    "zh" : "对方拿下这一局，局分5比0"
+  },
+  {
+    "en" : "Game to them. Games 5 1",
+    "id" : "game_opponent_5_1",
+    "zh" : "对方拿下这一局，局分5比1"
+  },
+  {
+    "en" : "Game to them. Games 5 2",
+    "id" : "game_opponent_5_2",
+    "zh" : "对方拿下这一局，局分5比2"
+  },
+  {
+    "en" : "Game to them. Games 5 3",
+    "id" : "game_opponent_5_3",
+    "zh" : "对方拿下这一局，局分5比3"
+  },
+  {
+    "en" : "Game to them. Games 5 4",
+    "id" : "game_opponent_5_4",
+    "zh" : "对方拿下这一局，局分5比4"
+  },
+  {
+    "en" : "Game to them. Games 5 5",
+    "id" : "game_opponent_5_5",
+    "zh" : "对方拿下这一局，局分5比5"
+  },
+  {
+    "en" : "Game to them. Games 5 6",
+    "id" : "game_opponent_5_6",
+    "zh" : "对方拿下这一局，局分5比6"
+  },
+  {
+    "en" : "Game to them. Games 5 7",
+    "id" : "game_opponent_5_7",
+    "zh" : "对方拿下这一局，局分5比7"
+  },
+  {
+    "en" : "Game to them. Games 6 0",
+    "id" : "game_opponent_6_0",
+    "zh" : "对方拿下这一局，局分6比0"
+  },
+  {
+    "en" : "Game to them. Games 6 1",
+    "id" : "game_opponent_6_1",
+    "zh" : "对方拿下这一局，局分6比1"
+  },
+  {
+    "en" : "Game to them. Games 6 2",
+    "id" : "game_opponent_6_2",
+    "zh" : "对方拿下这一局，局分6比2"
+  },
+  {
+    "en" : "Game to them. Games 6 3",
+    "id" : "game_opponent_6_3",
+    "zh" : "对方拿下这一局，局分6比3"
+  },
+  {
+    "en" : "Game to them. Games 6 4",
+    "id" : "game_opponent_6_4",
+    "zh" : "对方拿下这一局，局分6比4"
+  },
+  {
+    "en" : "Game to them. Games 6 5",
+    "id" : "game_opponent_6_5",
+    "zh" : "对方拿下这一局，局分6比5"
+  },
+  {
+    "en" : "Game to them. Games 6 6",
+    "id" : "game_opponent_6_6",
+    "zh" : "对方拿下这一局，局分6比6"
+  },
+  {
+    "en" : "Game to them. Games 6 7",
+    "id" : "game_opponent_6_7",
+    "zh" : "对方拿下这一局，局分6比7"
+  },
+  {
+    "en" : "Game to them. Games 7 0",
+    "id" : "game_opponent_7_0",
+    "zh" : "对方拿下这一局，局分7比0"
+  },
+  {
+    "en" : "Game to them. Games 7 1",
+    "id" : "game_opponent_7_1",
+    "zh" : "对方拿下这一局，局分7比1"
+  },
+  {
+    "en" : "Game to them. Games 7 2",
+    "id" : "game_opponent_7_2",
+    "zh" : "对方拿下这一局，局分7比2"
+  },
+  {
+    "en" : "Game to them. Games 7 3",
+    "id" : "game_opponent_7_3",
+    "zh" : "对方拿下这一局，局分7比3"
+  },
+  {
+    "en" : "Game to them. Games 7 4",
+    "id" : "game_opponent_7_4",
+    "zh" : "对方拿下这一局，局分7比4"
+  },
+  {
+    "en" : "Game to them. Games 7 5",
+    "id" : "game_opponent_7_5",
+    "zh" : "对方拿下这一局，局分7比5"
+  },
+  {
+    "en" : "Game to them. Games 7 6",
+    "id" : "game_opponent_7_6",
+    "zh" : "对方拿下这一局，局分7比6"
+  },
+  {
+    "en" : "Game to them. Games 7 7",
+    "id" : "game_opponent_7_7",
+    "zh" : "对方拿下这一局，局分7比7"
+  },
+  {
+    "en" : "Tie-break",
+    "id" : "tb_start",
+    "zh" : "进入抢七"
+  },
+  {
+    "en" : "zero all",
+    "id" : "tb_0_0",
+    "zh" : "零平"
+  },
+  {
+    "en" : "zero 1",
+    "id" : "tb_0_1",
+    "zh" : "零比1"
+  },
+  {
+    "en" : "zero 2",
+    "id" : "tb_0_2",
+    "zh" : "零比2"
+  },
+  {
+    "en" : "zero 3",
+    "id" : "tb_0_3",
+    "zh" : "零比3"
+  },
+  {
+    "en" : "zero 4",
+    "id" : "tb_0_4",
+    "zh" : "零比4"
+  },
+  {
+    "en" : "zero 5",
+    "id" : "tb_0_5",
+    "zh" : "零比5"
+  },
+  {
+    "en" : "zero 6",
+    "id" : "tb_0_6",
+    "zh" : "零比6"
+  },
+  {
+    "en" : "zero 7",
+    "id" : "tb_0_7",
+    "zh" : "零比7"
+  },
+  {
+    "en" : "zero 8",
+    "id" : "tb_0_8",
+    "zh" : "零比8"
+  },
+  {
+    "en" : "zero 9",
+    "id" : "tb_0_9",
+    "zh" : "零比9"
+  },
+  {
+    "en" : "zero 10",
+    "id" : "tb_0_10",
+    "zh" : "零比10"
+  },
+  {
+    "en" : "zero 11",
+    "id" : "tb_0_11",
+    "zh" : "零比11"
+  },
+  {
+    "en" : "zero 12",
+    "id" : "tb_0_12",
+    "zh" : "零比12"
+  },
+  {
+    "en" : "1 zero",
+    "id" : "tb_1_0",
+    "zh" : "1比零"
+  },
+  {
+    "en" : "1 all",
+    "id" : "tb_1_1",
+    "zh" : "1平"
+  },
+  {
+    "en" : "1 2",
+    "id" : "tb_1_2",
+    "zh" : "1比2"
+  },
+  {
+    "en" : "1 3",
+    "id" : "tb_1_3",
+    "zh" : "1比3"
+  },
+  {
+    "en" : "1 4",
+    "id" : "tb_1_4",
+    "zh" : "1比4"
+  },
+  {
+    "en" : "1 5",
+    "id" : "tb_1_5",
+    "zh" : "1比5"
+  },
+  {
+    "en" : "1 6",
+    "id" : "tb_1_6",
+    "zh" : "1比6"
+  },
+  {
+    "en" : "1 7",
+    "id" : "tb_1_7",
+    "zh" : "1比7"
+  },
+  {
+    "en" : "1 8",
+    "id" : "tb_1_8",
+    "zh" : "1比8"
+  },
+  {
+    "en" : "1 9",
+    "id" : "tb_1_9",
+    "zh" : "1比9"
+  },
+  {
+    "en" : "1 10",
+    "id" : "tb_1_10",
+    "zh" : "1比10"
+  },
+  {
+    "en" : "1 11",
+    "id" : "tb_1_11",
+    "zh" : "1比11"
+  },
+  {
+    "en" : "1 12",
+    "id" : "tb_1_12",
+    "zh" : "1比12"
+  },
+  {
+    "en" : "2 zero",
+    "id" : "tb_2_0",
+    "zh" : "2比零"
+  },
+  {
+    "en" : "2 1",
+    "id" : "tb_2_1",
+    "zh" : "2比1"
+  },
+  {
+    "en" : "2 all",
+    "id" : "tb_2_2",
+    "zh" : "2平"
+  },
+  {
+    "en" : "2 3",
+    "id" : "tb_2_3",
+    "zh" : "2比3"
+  },
+  {
+    "en" : "2 4",
+    "id" : "tb_2_4",
+    "zh" : "2比4"
+  },
+  {
+    "en" : "2 5",
+    "id" : "tb_2_5",
+    "zh" : "2比5"
+  },
+  {
+    "en" : "2 6",
+    "id" : "tb_2_6",
+    "zh" : "2比6"
+  },
+  {
+    "en" : "2 7",
+    "id" : "tb_2_7",
+    "zh" : "2比7"
+  },
+  {
+    "en" : "2 8",
+    "id" : "tb_2_8",
+    "zh" : "2比8"
+  },
+  {
+    "en" : "2 9",
+    "id" : "tb_2_9",
+    "zh" : "2比9"
+  },
+  {
+    "en" : "2 10",
+    "id" : "tb_2_10",
+    "zh" : "2比10"
+  },
+  {
+    "en" : "2 11",
+    "id" : "tb_2_11",
+    "zh" : "2比11"
+  },
+  {
+    "en" : "2 12",
+    "id" : "tb_2_12",
+    "zh" : "2比12"
+  },
+  {
+    "en" : "3 zero",
+    "id" : "tb_3_0",
+    "zh" : "3比零"
+  },
+  {
+    "en" : "3 1",
+    "id" : "tb_3_1",
+    "zh" : "3比1"
+  },
+  {
+    "en" : "3 2",
+    "id" : "tb_3_2",
+    "zh" : "3比2"
+  },
+  {
+    "en" : "3 all",
+    "id" : "tb_3_3",
+    "zh" : "3平"
+  },
+  {
+    "en" : "3 4",
+    "id" : "tb_3_4",
+    "zh" : "3比4"
+  },
+  {
+    "en" : "3 5",
+    "id" : "tb_3_5",
+    "zh" : "3比5"
+  },
+  {
+    "en" : "3 6",
+    "id" : "tb_3_6",
+    "zh" : "3比6"
+  },
+  {
+    "en" : "3 7",
+    "id" : "tb_3_7",
+    "zh" : "3比7"
+  },
+  {
+    "en" : "3 8",
+    "id" : "tb_3_8",
+    "zh" : "3比8"
+  },
+  {
+    "en" : "3 9",
+    "id" : "tb_3_9",
+    "zh" : "3比9"
+  },
+  {
+    "en" : "3 10",
+    "id" : "tb_3_10",
+    "zh" : "3比10"
+  },
+  {
+    "en" : "3 11",
+    "id" : "tb_3_11",
+    "zh" : "3比11"
+  },
+  {
+    "en" : "3 12",
+    "id" : "tb_3_12",
+    "zh" : "3比12"
+  },
+  {
+    "en" : "4 zero",
+    "id" : "tb_4_0",
+    "zh" : "4比零"
+  },
+  {
+    "en" : "4 1",
+    "id" : "tb_4_1",
+    "zh" : "4比1"
+  },
+  {
+    "en" : "4 2",
+    "id" : "tb_4_2",
+    "zh" : "4比2"
+  },
+  {
+    "en" : "4 3",
+    "id" : "tb_4_3",
+    "zh" : "4比3"
+  },
+  {
+    "en" : "4 all",
+    "id" : "tb_4_4",
+    "zh" : "4平"
+  },
+  {
+    "en" : "4 5",
+    "id" : "tb_4_5",
+    "zh" : "4比5"
+  },
+  {
+    "en" : "4 6",
+    "id" : "tb_4_6",
+    "zh" : "4比6"
+  },
+  {
+    "en" : "4 7",
+    "id" : "tb_4_7",
+    "zh" : "4比7"
+  },
+  {
+    "en" : "4 8",
+    "id" : "tb_4_8",
+    "zh" : "4比8"
+  },
+  {
+    "en" : "4 9",
+    "id" : "tb_4_9",
+    "zh" : "4比9"
+  },
+  {
+    "en" : "4 10",
+    "id" : "tb_4_10",
+    "zh" : "4比10"
+  },
+  {
+    "en" : "4 11",
+    "id" : "tb_4_11",
+    "zh" : "4比11"
+  },
+  {
+    "en" : "4 12",
+    "id" : "tb_4_12",
+    "zh" : "4比12"
+  },
+  {
+    "en" : "5 zero",
+    "id" : "tb_5_0",
+    "zh" : "5比零"
+  },
+  {
+    "en" : "5 1",
+    "id" : "tb_5_1",
+    "zh" : "5比1"
+  },
+  {
+    "en" : "5 2",
+    "id" : "tb_5_2",
+    "zh" : "5比2"
+  },
+  {
+    "en" : "5 3",
+    "id" : "tb_5_3",
+    "zh" : "5比3"
+  },
+  {
+    "en" : "5 4",
+    "id" : "tb_5_4",
+    "zh" : "5比4"
+  },
+  {
+    "en" : "5 all",
+    "id" : "tb_5_5",
+    "zh" : "5平"
+  },
+  {
+    "en" : "5 6",
+    "id" : "tb_5_6",
+    "zh" : "5比6"
+  },
+  {
+    "en" : "5 7",
+    "id" : "tb_5_7",
+    "zh" : "5比7"
+  },
+  {
+    "en" : "5 8",
+    "id" : "tb_5_8",
+    "zh" : "5比8"
+  },
+  {
+    "en" : "5 9",
+    "id" : "tb_5_9",
+    "zh" : "5比9"
+  },
+  {
+    "en" : "5 10",
+    "id" : "tb_5_10",
+    "zh" : "5比10"
+  },
+  {
+    "en" : "5 11",
+    "id" : "tb_5_11",
+    "zh" : "5比11"
+  },
+  {
+    "en" : "5 12",
+    "id" : "tb_5_12",
+    "zh" : "5比12"
+  },
+  {
+    "en" : "6 zero",
+    "id" : "tb_6_0",
+    "zh" : "6比零"
+  },
+  {
+    "en" : "6 1",
+    "id" : "tb_6_1",
+    "zh" : "6比1"
+  },
+  {
+    "en" : "6 2",
+    "id" : "tb_6_2",
+    "zh" : "6比2"
+  },
+  {
+    "en" : "6 3",
+    "id" : "tb_6_3",
+    "zh" : "6比3"
+  },
+  {
+    "en" : "6 4",
+    "id" : "tb_6_4",
+    "zh" : "6比4"
+  },
+  {
+    "en" : "6 5",
+    "id" : "tb_6_5",
+    "zh" : "6比5"
+  },
+  {
+    "en" : "6 all",
+    "id" : "tb_6_6",
+    "zh" : "6平"
+  },
+  {
+    "en" : "6 7",
+    "id" : "tb_6_7",
+    "zh" : "6比7"
+  },
+  {
+    "en" : "6 8",
+    "id" : "tb_6_8",
+    "zh" : "6比8"
+  },
+  {
+    "en" : "6 9",
+    "id" : "tb_6_9",
+    "zh" : "6比9"
+  },
+  {
+    "en" : "6 10",
+    "id" : "tb_6_10",
+    "zh" : "6比10"
+  },
+  {
+    "en" : "6 11",
+    "id" : "tb_6_11",
+    "zh" : "6比11"
+  },
+  {
+    "en" : "6 12",
+    "id" : "tb_6_12",
+    "zh" : "6比12"
+  },
+  {
+    "en" : "7 zero",
+    "id" : "tb_7_0",
+    "zh" : "7比零"
+  },
+  {
+    "en" : "7 1",
+    "id" : "tb_7_1",
+    "zh" : "7比1"
+  },
+  {
+    "en" : "7 2",
+    "id" : "tb_7_2",
+    "zh" : "7比2"
+  },
+  {
+    "en" : "7 3",
+    "id" : "tb_7_3",
+    "zh" : "7比3"
+  },
+  {
+    "en" : "7 4",
+    "id" : "tb_7_4",
+    "zh" : "7比4"
+  },
+  {
+    "en" : "7 5",
+    "id" : "tb_7_5",
+    "zh" : "7比5"
+  },
+  {
+    "en" : "7 6",
+    "id" : "tb_7_6",
+    "zh" : "7比6"
+  },
+  {
+    "en" : "7 all",
+    "id" : "tb_7_7",
+    "zh" : "7平"
+  },
+  {
+    "en" : "7 8",
+    "id" : "tb_7_8",
+    "zh" : "7比8"
+  },
+  {
+    "en" : "7 9",
+    "id" : "tb_7_9",
+    "zh" : "7比9"
+  },
+  {
+    "en" : "7 10",
+    "id" : "tb_7_10",
+    "zh" : "7比10"
+  },
+  {
+    "en" : "7 11",
+    "id" : "tb_7_11",
+    "zh" : "7比11"
+  },
+  {
+    "en" : "7 12",
+    "id" : "tb_7_12",
+    "zh" : "7比12"
+  },
+  {
+    "en" : "8 zero",
+    "id" : "tb_8_0",
+    "zh" : "8比零"
+  },
+  {
+    "en" : "8 1",
+    "id" : "tb_8_1",
+    "zh" : "8比1"
+  },
+  {
+    "en" : "8 2",
+    "id" : "tb_8_2",
+    "zh" : "8比2"
+  },
+  {
+    "en" : "8 3",
+    "id" : "tb_8_3",
+    "zh" : "8比3"
+  },
+  {
+    "en" : "8 4",
+    "id" : "tb_8_4",
+    "zh" : "8比4"
+  },
+  {
+    "en" : "8 5",
+    "id" : "tb_8_5",
+    "zh" : "8比5"
+  },
+  {
+    "en" : "8 6",
+    "id" : "tb_8_6",
+    "zh" : "8比6"
+  },
+  {
+    "en" : "8 7",
+    "id" : "tb_8_7",
+    "zh" : "8比7"
+  },
+  {
+    "en" : "8 all",
+    "id" : "tb_8_8",
+    "zh" : "8平"
+  },
+  {
+    "en" : "8 9",
+    "id" : "tb_8_9",
+    "zh" : "8比9"
+  },
+  {
+    "en" : "8 10",
+    "id" : "tb_8_10",
+    "zh" : "8比10"
+  },
+  {
+    "en" : "8 11",
+    "id" : "tb_8_11",
+    "zh" : "8比11"
+  },
+  {
+    "en" : "8 12",
+    "id" : "tb_8_12",
+    "zh" : "8比12"
+  },
+  {
+    "en" : "9 zero",
+    "id" : "tb_9_0",
+    "zh" : "9比零"
+  },
+  {
+    "en" : "9 1",
+    "id" : "tb_9_1",
+    "zh" : "9比1"
+  },
+  {
+    "en" : "9 2",
+    "id" : "tb_9_2",
+    "zh" : "9比2"
+  },
+  {
+    "en" : "9 3",
+    "id" : "tb_9_3",
+    "zh" : "9比3"
+  },
+  {
+    "en" : "9 4",
+    "id" : "tb_9_4",
+    "zh" : "9比4"
+  },
+  {
+    "en" : "9 5",
+    "id" : "tb_9_5",
+    "zh" : "9比5"
+  },
+  {
+    "en" : "9 6",
+    "id" : "tb_9_6",
+    "zh" : "9比6"
+  },
+  {
+    "en" : "9 7",
+    "id" : "tb_9_7",
+    "zh" : "9比7"
+  },
+  {
+    "en" : "9 8",
+    "id" : "tb_9_8",
+    "zh" : "9比8"
+  },
+  {
+    "en" : "9 all",
+    "id" : "tb_9_9",
+    "zh" : "9平"
+  },
+  {
+    "en" : "9 10",
+    "id" : "tb_9_10",
+    "zh" : "9比10"
+  },
+  {
+    "en" : "9 11",
+    "id" : "tb_9_11",
+    "zh" : "9比11"
+  },
+  {
+    "en" : "9 12",
+    "id" : "tb_9_12",
+    "zh" : "9比12"
+  },
+  {
+    "en" : "10 zero",
+    "id" : "tb_10_0",
+    "zh" : "10比零"
+  },
+  {
+    "en" : "10 1",
+    "id" : "tb_10_1",
+    "zh" : "10比1"
+  },
+  {
+    "en" : "10 2",
+    "id" : "tb_10_2",
+    "zh" : "10比2"
+  },
+  {
+    "en" : "10 3",
+    "id" : "tb_10_3",
+    "zh" : "10比3"
+  },
+  {
+    "en" : "10 4",
+    "id" : "tb_10_4",
+    "zh" : "10比4"
+  },
+  {
+    "en" : "10 5",
+    "id" : "tb_10_5",
+    "zh" : "10比5"
+  },
+  {
+    "en" : "10 6",
+    "id" : "tb_10_6",
+    "zh" : "10比6"
+  },
+  {
+    "en" : "10 7",
+    "id" : "tb_10_7",
+    "zh" : "10比7"
+  },
+  {
+    "en" : "10 8",
+    "id" : "tb_10_8",
+    "zh" : "10比8"
+  },
+  {
+    "en" : "10 9",
+    "id" : "tb_10_9",
+    "zh" : "10比9"
+  },
+  {
+    "en" : "10 all",
+    "id" : "tb_10_10",
+    "zh" : "10平"
+  },
+  {
+    "en" : "10 11",
+    "id" : "tb_10_11",
+    "zh" : "10比11"
+  },
+  {
+    "en" : "10 12",
+    "id" : "tb_10_12",
+    "zh" : "10比12"
+  },
+  {
+    "en" : "11 zero",
+    "id" : "tb_11_0",
+    "zh" : "11比零"
+  },
+  {
+    "en" : "11 1",
+    "id" : "tb_11_1",
+    "zh" : "11比1"
+  },
+  {
+    "en" : "11 2",
+    "id" : "tb_11_2",
+    "zh" : "11比2"
+  },
+  {
+    "en" : "11 3",
+    "id" : "tb_11_3",
+    "zh" : "11比3"
+  },
+  {
+    "en" : "11 4",
+    "id" : "tb_11_4",
+    "zh" : "11比4"
+  },
+  {
+    "en" : "11 5",
+    "id" : "tb_11_5",
+    "zh" : "11比5"
+  },
+  {
+    "en" : "11 6",
+    "id" : "tb_11_6",
+    "zh" : "11比6"
+  },
+  {
+    "en" : "11 7",
+    "id" : "tb_11_7",
+    "zh" : "11比7"
+  },
+  {
+    "en" : "11 8",
+    "id" : "tb_11_8",
+    "zh" : "11比8"
+  },
+  {
+    "en" : "11 9",
+    "id" : "tb_11_9",
+    "zh" : "11比9"
+  },
+  {
+    "en" : "11 10",
+    "id" : "tb_11_10",
+    "zh" : "11比10"
+  },
+  {
+    "en" : "11 all",
+    "id" : "tb_11_11",
+    "zh" : "11平"
+  },
+  {
+    "en" : "11 12",
+    "id" : "tb_11_12",
+    "zh" : "11比12"
+  },
+  {
+    "en" : "12 zero",
+    "id" : "tb_12_0",
+    "zh" : "12比零"
+  },
+  {
+    "en" : "12 1",
+    "id" : "tb_12_1",
+    "zh" : "12比1"
+  },
+  {
+    "en" : "12 2",
+    "id" : "tb_12_2",
+    "zh" : "12比2"
+  },
+  {
+    "en" : "12 3",
+    "id" : "tb_12_3",
+    "zh" : "12比3"
+  },
+  {
+    "en" : "12 4",
+    "id" : "tb_12_4",
+    "zh" : "12比4"
+  },
+  {
+    "en" : "12 5",
+    "id" : "tb_12_5",
+    "zh" : "12比5"
+  },
+  {
+    "en" : "12 6",
+    "id" : "tb_12_6",
+    "zh" : "12比6"
+  },
+  {
+    "en" : "12 7",
+    "id" : "tb_12_7",
+    "zh" : "12比7"
+  },
+  {
+    "en" : "12 8",
+    "id" : "tb_12_8",
+    "zh" : "12比8"
+  },
+  {
+    "en" : "12 9",
+    "id" : "tb_12_9",
+    "zh" : "12比9"
+  },
+  {
+    "en" : "12 10",
+    "id" : "tb_12_10",
+    "zh" : "12比10"
+  },
+  {
+    "en" : "12 11",
+    "id" : "tb_12_11",
+    "zh" : "12比11"
+  },
+  {
+    "en" : "12 all",
+    "id" : "tb_12_12",
+    "zh" : "12平"
+  },
+  {
+    "en" : "Change ends",
+    "id" : "change_ends",
+    "zh" : "换边"
+  },
+  {
+    "en" : "Our serve",
+    "id" : "serve_me",
+    "zh" : "该我方发球"
+  },
+  {
+    "en" : "Their serve",
+    "id" : "serve_opponent",
+    "zh" : "该对方发球"
+  },
+  {
+    "en" : "Game, set and match to us. 4 games to 0",
+    "id" : "set_me_4_0",
+    "zh" : "我方以4比0拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to us. 4 games to 1",
+    "id" : "set_me_4_1",
+    "zh" : "我方以4比1拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to us. 4 games to 2",
+    "id" : "set_me_4_2",
+    "zh" : "我方以4比2拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to us. 5 games to 3",
+    "id" : "set_me_5_3",
+    "zh" : "我方以5比3拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to us. 6 games to 0",
+    "id" : "set_me_6_0",
+    "zh" : "我方以6比0拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to us. 6 games to 1",
+    "id" : "set_me_6_1",
+    "zh" : "我方以6比1拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to us. 6 games to 2",
+    "id" : "set_me_6_2",
+    "zh" : "我方以6比2拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to us. 6 games to 3",
+    "id" : "set_me_6_3",
+    "zh" : "我方以6比3拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to us. 6 games to 4",
+    "id" : "set_me_6_4",
+    "zh" : "我方以6比4拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to us. 7 games to 5",
+    "id" : "set_me_7_5",
+    "zh" : "我方以7比5拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to us. 5 games to 4, on the tie-break",
+    "id" : "settb_me_5_4",
+    "zh" : "我方以5比4抢七拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to us. 7 games to 6, on the tie-break",
+    "id" : "settb_me_7_6",
+    "zh" : "我方以7比6抢七拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to them. 4 games to 0",
+    "id" : "set_opponent_4_0",
+    "zh" : "对方以4比0拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to them. 4 games to 1",
+    "id" : "set_opponent_4_1",
+    "zh" : "对方以4比1拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to them. 4 games to 2",
+    "id" : "set_opponent_4_2",
+    "zh" : "对方以4比2拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to them. 5 games to 3",
+    "id" : "set_opponent_5_3",
+    "zh" : "对方以5比3拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to them. 6 games to 0",
+    "id" : "set_opponent_6_0",
+    "zh" : "对方以6比0拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to them. 6 games to 1",
+    "id" : "set_opponent_6_1",
+    "zh" : "对方以6比1拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to them. 6 games to 2",
+    "id" : "set_opponent_6_2",
+    "zh" : "对方以6比2拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to them. 6 games to 3",
+    "id" : "set_opponent_6_3",
+    "zh" : "对方以6比3拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to them. 6 games to 4",
+    "id" : "set_opponent_6_4",
+    "zh" : "对方以6比4拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to them. 7 games to 5",
+    "id" : "set_opponent_7_5",
+    "zh" : "对方以7比5拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to them. 5 games to 4, on the tie-break",
+    "id" : "settb_opponent_5_4",
+    "zh" : "对方以5比4抢七拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Game, set and match to them. 7 games to 6, on the tie-break",
+    "id" : "settb_opponent_7_6",
+    "zh" : "对方以7比6抢七拿下本盘，比赛结束"
+  },
+  {
+    "en" : "Ladies and gentlemen, quiet please. Thank you",
+    "id" : "call_quiet",
+    "zh" : "请大家保持安静，谢谢"
+  },
+  {
+    "en" : "Out!",
+    "id" : "call_out",
+    "zh" : "出界"
+  },
+  {
+    "en" : "Let. First service",
+    "id" : "call_letFirst",
+    "zh" : "擦网，重发一发"
+  },
+  {
+    "en" : "Let. Second service",
+    "id" : "call_letSecond",
+    "zh" : "擦网，重发二发"
+  }
+]

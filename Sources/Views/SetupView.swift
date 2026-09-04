@@ -21,6 +21,10 @@ struct SetupView: View {
     @State private var playerRoster: [String] = SettingsStore.playerRoster
     @State private var teamRoster: [String] = SettingsStore.teamRoster
     @State private var showRoster = false
+    @State private var showVoiceGuide = false
+    /// 从「设置」装完人声回来时触发重新检测（body 里重新读取 speechVoices）。
+    @State private var voiceRefresh = 0
+    @Environment(\.scenePhase) private var scenePhase
 
     private enum Field: Hashable { case teamMe, me1, me2, teamOpp, opp1, opp2 }
     @FocusState private var focused: Field?
@@ -116,6 +120,9 @@ struct SetupView: View {
                             }
                             .pickerStyle(.segmented)
                         }
+                        if let hint = voiceHint {
+                            voiceHintRow(hint).id(voiceRefresh)
+                        }
                     }
 
                     startButton
@@ -132,6 +139,12 @@ struct SetupView: View {
             teamRoster = SettingsStore.teamRoster
         }) {
             RosterEditorView(isChinese: isChinese)
+        }
+        .sheet(isPresented: $showVoiceGuide) {
+            VoiceInstallGuideView(language: appModel.language, umpire: appModel.umpire)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { voiceRefresh += 1 }
         }
     }
 
@@ -255,6 +268,72 @@ struct SetupView: View {
             content()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: - 人声安装提示
+
+    /// 系统缺少高音质人声 / 所选性别人声时给一句提示（nil = 一切就绪，不显示）。
+    /// iOS 不允许 App 代为下载人声，只能引导用户去「设置」里装。
+    private var voiceHint: String? {
+        let lang = appModel.language
+        let langName = isChinese ? (lang == .chinese ? "中文" : "英文") : (lang == .chinese ? "Chinese" : "English")
+        let missingEnhanced = !Announcer.hasEnhancedVoice(for: lang)
+        let missingGender = !Announcer.voiceAvailable(gender: appModel.umpire, languageCode: lang.voiceCode)
+        let hasBundled = VoiceClips.available(language: lang, umpire: appModel.umpire)
+        if missingEnhanced && hasBundled {
+            // 有内置人声兜底：播报质量没问题，只是念不出名字
+            return isChinese
+                ? "未安装高音质\(langName)系统人声，将使用内置裁判声，播报里不会念队员名/队名。装一个「增强」人声即可念名字。"
+                : "No high-quality \(langName) system voice installed. The built-in umpire voice will be used, without player or team names. Install an Enhanced voice to hear names."
+        }
+        switch (missingEnhanced, missingGender) {
+        case (false, false):
+            return nil
+        case (true, _):
+            return isChinese
+                ? "未安装高音质\(langName)系统人声，播报会很机械。"
+                : "No high-quality \(langName) voice installed — announcements will sound robotic."
+        case (false, true):
+            let genderName = isChinese ? (appModel.umpire == .female ? "女声" : "男声")
+                                       : (appModel.umpire == .female ? "female" : "male")
+            return isChinese
+                ? "系统里没有\(langName)\(genderName)，将改用其他声音。"
+                : "No \(genderName) \(langName) voice installed — another voice will be used."
+        }
+    }
+
+    private func voiceHintRow(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(RexTheme.accent)
+                .padding(.top, 1)
+            VStack(alignment: .leading, spacing: 8) {
+                Text(text)
+                    .font(.system(size: 13))
+                    .foregroundStyle(RexTheme.text.opacity(0.85))
+                    .fixedSize(horizontal: false, vertical: true)
+                Button {
+                    showVoiceGuide = true
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(isChinese ? "怎么安装人声" : "How to install voices")
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 10, weight: .bold))
+                    }
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(RexTheme.accent)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RexTheme.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(RexTheme.accent.opacity(0.25), lineWidth: 1)
+        )
     }
 
     // MARK: - 开始按钮

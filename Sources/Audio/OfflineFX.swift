@@ -115,7 +115,7 @@ enum OfflineFX {
         engine.connect(reverb, to: engine.mainMixerNode, format: format)
 
         let voiceDur = Double(voice.frameLength) / format.sampleRate
-        let padded = TTSRender.padded(voice, leadingSeconds: 0.08) ?? voice   // 抬麦停顿
+        let padded = TTSRender.padded(voice, leadingSeconds: 0.04) ?? voice   // 极短抬麦停顿（再长就成了可感知的延迟）
         let totalDur = voiceDur + 2.6   // 报分念完后背景音继续飘一会儿再缓慢消失
 
         // 现场人群底噪：真实球场氛围垫底，让报分不像"空房间里说话"。

@@ -26,5 +26,6 @@ final class AppModel: ObservableObject {
         // 沿用刚才比赛里的语言选择。
         if let current = match?.language { language = current }
         match = nil
+        AudioSessionManager.shared.endMatch()   // 停掉静音保活，释放音频硬件
     }
 }

@@ -10,12 +10,16 @@ final class MatchViewModel: ObservableObject {
         didSet {
             announcer.language = language
             SettingsStore.language = language
+            refreshVoiceSource()
+            prefetchUpcoming()   // 换嗓子后，下一分的文案用新嗓子重新预烘
         }
     }
     @Published var umpire: UmpireVoice {
         didSet {
             announcer.umpire = umpire
             SettingsStore.umpire = umpire
+            refreshVoiceSource()
+            prefetchUpcoming()
         }
     }
 
@@ -33,6 +37,37 @@ final class MatchViewModel: ObservableObject {
         self.umpire = umpire
         self.announcer.language = language
         self.announcer.umpire = umpire
+        refreshVoiceSource()
+        // 开赛即激活音频会话并保活蓝牙链路；同时把开局可能用到的文案全部预烘好
+        AudioSessionManager.shared.beginMatch()
+        prefetchUpcoming()
+    }
+
+    /// 是否使用内置预录人声（用户没装增强系统人声、且随包提供了该语言×性别的片段）。
+    /// 内置模式下播报不带人名/队名（改用「我方 / 对方」）。
+    private(set) var usesBundledVoice = false
+
+    private func refreshVoiceSource() {
+        let hasEnhanced = Announcer.hasEnhancedVoice(for: language)
+        let bundled = VoiceClips.available(language: language, umpire: umpire)
+        usesBundledVoice = bundled && (!hasEnhanced || SettingsStore.forceBundledVoice)
+        announcer.source = usesBundledVoice ? .bundled : .system
+    }
+
+    /// 事件 → 待播内容（文本 + 内置片段序列）。
+    private func utterance(for events: [MatchEvent], state s: MatchState) -> Announcer.Utterance {
+        let phrases = builder.phrases(for: events, state: s, language: language, nameless: usesBundledVoice)
+        let ids = phrases.map(\.clipID)
+        let clipIDs: [String]? = (usesBundledVoice && !ids.contains(where: { $0 == nil }))
+            ? ids.compactMap { $0 } : nil
+        return Announcer.Utterance(text: builder.join(phrases, language), clipIDs: clipIDs)
+    }
+
+    private func callUtterance(_ call: AnnouncementBuilder.UmpireCall) -> Announcer.Utterance {
+        let phrase = AnnouncementBuilder.Phrase.call(call)
+        return Announcer.Utterance(text: phrase.text(language),
+                                   clipIDs: usesBundledVoice ? phrase.clipID.map { [$0] } : nil,
+                                   emphatic: true)
     }
 
     var isFinished: Bool { state.phase == .finished }
@@ -56,8 +91,26 @@ final class MatchViewModel: ObservableObject {
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         }
 
-        let text = builder.utterance(for: events, state: next, language: language)
-        announcer.speak(text)
+        announcer.speak(utterance(for: events, state: next))
+        prefetchUpcoming()   // 排在本条之后：把下一分两种可能提前烘好
+    }
+
+    /// 预取：下一分「我方得 / 对方得」两种结果的播报、当前比分（再报一次）、
+    /// 四句裁判喊话。文案确定性生成，因此真正点击时几乎总是缓存命中。
+    private func prefetchUpcoming() {
+        if !isFinished {
+            // 最可能马上用到的排最前：下一分的两种结果
+            for side in [Side.me, .opponent] {
+                var next = state
+                let events = ScoreEngine.applyPoint(side, to: &next)
+                announcer.prefetch(utterance(for: events, state: next))
+            }
+            let event: MatchEvent = state.phase == .tiebreak ? .tiebreakPoint : .point
+            announcer.prefetch(utterance(for: [event], state: state))
+        }
+        for call in AnnouncementBuilder.UmpireCall.allCases {
+            announcer.prefetch(callUtterance(call))
+        }
     }
 
     /// 撤销上一步得分（静默，不播报）。
@@ -67,6 +120,7 @@ final class MatchViewModel: ObservableObject {
         withAnimation(.snappy(duration: 0.3)) { state = previous }
         showChangeEnds = false
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        prefetchUpcoming()
     }
 
     /// 播放一种欢呼音效（比赛中手动触发）。
@@ -78,7 +132,7 @@ final class MatchViewModel: ObservableObject {
     /// 手动播报一句裁判喊话（安静/出界/擦网重发），用整场同一个裁判声线。
     func umpireCall(_ call: AnnouncementBuilder.UmpireCall) {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        announcer.speak(builder.umpireCall(call, language: language), emphatic: true)
+        announcer.speak(callUtterance(call))
     }
 
     /// 一键静音：立即停掉正在播的语音与所有音效。
@@ -92,7 +146,7 @@ final class MatchViewModel: ObservableObject {
     func repeatCurrentScore() {
         let event: MatchEvent = state.phase == .tiebreak ? .tiebreakPoint : .point
         guard !isFinished else { return }
-        announcer.speak(builder.utterance(for: [event], state: state, language: language))
+        announcer.speak(utterance(for: [event], state: state))
     }
 
 #if DEBUG

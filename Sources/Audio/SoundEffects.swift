@@ -6,6 +6,9 @@ import AVFoundation
 /// - bigcheer：狂欢人群 + 口哨（关键分/胜利）
 /// - cheers：全场人群欢呼
 /// - groan：观众失望叹息（可惜的失误/被逆转）
+///
+/// 音频会话由 `AudioSessionManager` 统一管理（比赛开始即激活并保活），
+/// 这里**不再**每次播放都重设会话——那会触发路由重配置、点击后要等一下才出声。
 final class SoundEffects {
 
     enum Kind: String, CaseIterable, Identifiable {
@@ -18,7 +21,7 @@ final class SoundEffects {
     private var players: [Kind: AVAudioPlayer] = [:]
 
     init() {
-        // 预加载，首次点击零延迟
+        // 预加载 + 预备缓冲，首次点击即出声
         for kind in Kind.allCases {
             guard let url = Bundle.main.url(forResource: kind.fileName,
                                             withExtension: "m4a") else { continue }
@@ -32,23 +35,18 @@ final class SoundEffects {
     /// 播放指定音效。多个音效可**同时叠加**播放、互不打断
     /// （现场掌声/欢呼/叹息本就会重叠）；不打断语音播报。
     func play(_ kind: Kind) {
-        ensureSession()
         guard let player = players[kind] else { return }
         player.currentTime = 0
         player.play()
     }
 
     /// 立即停掉所有正在播放的音效（配合「全部静音」）。
+    /// stop() 会释放解码缓冲，随手 prepareToPlay 让下一次点击仍然零延迟。
     func stopAll() {
         for (_, p) in players where p.isPlaying {
             p.stop()
             p.currentTime = 0
+            p.prepareToPlay()
         }
-    }
-
-    private func ensureSession() {
-        let session = AVAudioSession.sharedInstance()
-        try? session.setCategory(.playback, mode: .default, options: [.duckOthers])
-        try? session.setActive(true)
     }
 }

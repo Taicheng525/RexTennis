@@ -11,6 +11,7 @@ enum SettingsStore {
     private static let doublesKey = "rex.isDoubles"
     private static let playerRosterKey = "rex.playerRoster"
     private static let teamRosterKey = "rex.teamRoster"
+    private static let forceBundledVoiceKey = "rex.forceBundledVoice"
 
     static var language: AnnounceLanguage {
         get {
@@ -53,6 +54,12 @@ enum SettingsStore {
     static var isDoubles: Bool {
         get { UserDefaults.standard.bool(forKey: doublesKey) }
         set { UserDefaults.standard.set(newValue, forKey: doublesKey) }
+    }
+
+    /// 开发用：即便装了增强系统人声，也强制用内置预录人声（用来试听/对比）。
+    static var forceBundledVoice: Bool {
+        get { UserDefaults.standard.bool(forKey: forceBundledVoiceKey) }
+        set { UserDefaults.standard.set(newValue, forKey: forceBundledVoiceKey) }
     }
 
     // MARK: - 名单（预存队员名 / 队名，下次可直接选择）

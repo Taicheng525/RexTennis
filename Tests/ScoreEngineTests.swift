@@ -321,3 +321,79 @@ final class ScoreEngineTests: XCTestCase {
         XCTAssertEqual(builder.utterance(for: [.changeEnds], state: s, language: .english), "Change ends")
     }
 }
+
+// MARK: - 内置人声清单
+
+final class VoiceClipManifestTests: XCTestCase {
+
+    /// 每个清单短句都有唯一 clipID；文本非空。
+    func testClipIDsUniqueAndTextsNonEmpty() {
+        let phrases = AnnouncementBuilder.allClipPhrases
+        let ids = phrases.compactMap(\.clipID)
+        XCTAssertEqual(ids.count, phrases.count, "清单里有短句缺 clipID")
+        XCTAssertEqual(Set(ids).count, ids.count, "clipID 重复")
+        for p in phrases {
+            XCTAssertFalse(p.text(.chinese).isEmpty)
+            XCTAssertFalse(p.text(.english).isEmpty)
+        }
+    }
+
+    /// nameless 模式下，真实比赛流程里出现的每个短句都能在清单里找到片段。
+    func testNamelessMatchPhrasesAreAllCovered() {
+        let known = Set(AnnouncementBuilder.allClipPhrases.compactMap(\.clipID))
+        let builder = AnnouncementBuilder()
+        for target in [4, 6] {
+            // 跑一场"每局都打到平分、抢七打到 7-5"的极限比赛，覆盖尽可能多的事件
+            var s = MatchState(config: MatchConfig(targetGames: target, firstServer: .me))
+            var turn = 0
+            while s.phase != .finished && turn < 400 {
+                let side: Side = (turn / 3) % 2 == 0 ? .me : .opponent
+                let events = ScoreEngine.applyPoint(side, to: &s)
+                for p in builder.phrases(for: events, state: s, language: .chinese, nameless: true) {
+                    XCTAssertNotNil(p.clipID, "\(p) 没有 clipID")
+                    if let id = p.clipID { XCTAssertTrue(known.contains(id), "清单缺 \(id)") }
+                }
+                turn += 1
+            }
+        }
+    }
+
+    /// 把清单导出为 JSON（供 tools/gen_voices.py 生成音频）。设置环境变量 REX_MANIFEST_OUT 时才写。
+    func testDumpManifestIfRequested() throws {
+        guard let out = ProcessInfo.processInfo.environment["REX_MANIFEST_OUT"], !out.isEmpty else { return }
+        var rows: [[String: String]] = []
+        for p in AnnouncementBuilder.allClipPhrases {
+            rows.append(["id": p.clipID!, "zh": p.text(.chinese), "en": p.text(.english)])
+        }
+        let data = try JSONSerialization.data(withJSONObject: rows, options: [.prettyPrinted, .sortedKeys])
+        try data.write(to: URL(fileURLWithPath: out))
+    }
+}
+
+// MARK: - 内置人声：真实读取随包片段并走 PA 烘焙（验证整条链路可用）
+
+final class VoiceClipPipelineTests: XCTestCase {
+
+    func testBundledClipsRenderAndBake() async throws {
+        for lang in AnnounceLanguage.allCases {
+            for umpire in UmpireVoice.allCases {
+                guard VoiceClips.available(language: lang, umpire: umpire) else {
+                    continue   // 未随包提供该组片段（如仅生成了部分声源）
+                }
+                let pcm = VoiceClips.render(clipIDs: ["score_1_2", "game_me_3_2", "serve_opponent"],
+                                            language: lang, umpire: umpire)
+                XCTAssertNotNil(pcm, "\(lang) \(umpire) 片段读取失败")
+                guard let pcm else { continue }
+                XCTAssertGreaterThan(pcm.frameLength, 44_100, "拼接后至少应有 1 秒音频")
+                let data = await OfflineFX.bakeStadiumPAAsync(pcm, emphatic: false, seed: 7)
+                XCTAssertNotNil(data, "\(lang) \(umpire) PA 烘焙失败")
+                XCTAssertGreaterThan(data?.count ?? 0, 44, "WAV 应有内容")
+            }
+        }
+    }
+
+    func testMissingClipFallsBackToNil() {
+        XCTAssertNil(VoiceClips.render(clipIDs: ["score_1_2", "no_such_clip"],
+                                       language: .chinese, umpire: .female))
+    }
+}
