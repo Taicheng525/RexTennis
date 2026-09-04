@@ -215,6 +215,20 @@ final class Announcer {
         }
     }
 
+    /// 已知的**标准普通话**系统人声（英文名前缀，小写）。iOS 18 起用户可下载东北话/四川话等
+    /// 方言人声，它们也挂在 zh-CN 下、音质还是「高级」，只按音质挑会把裁判变成说方言的——
+    /// 所以中文挑选时：名单内的普通话人声永远排在名单外的前面。
+    nonisolated private static let mandarinVoiceNames = [
+        "lili", "han", "tingting", "ting-ting", "yushu", "yu-shu", "li-mu", "limu", "binbin", "yue"
+    ]
+
+    /// 是否为已知标准普通话人声（非中文一律 true，不参与该规则）。
+    nonisolated static func isStandardMandarin(_ voice: AVSpeechSynthesisVoice) -> Bool {
+        guard voice.language.hasPrefix("zh") else { return true }
+        let n = voice.name.lowercased()
+        return mandarinVoiceNames.contains { n.hasPrefix($0) }
+    }
+
     /// 从系统人声中挑选：先按（推断）性别过滤（无匹配则退回全部），再取音质最高的。
     /// **完全确定性**：音质、区域匹配相同时用 identifier 兜底排序，
     /// 保证同一设置每次都挑到同一把嗓子（否则男声会时好时坏、忽男忽女）。
@@ -239,6 +253,9 @@ final class Announcer {
         // 「推荐嗓子」与设置页安装教程一致：用户照教程装完，听到的就是教程里那一个。
         let preferred = recommendedVoiceName(languageCode: languageCode, umpire: umpire).lowercased()
         return pool.sorted { a, b in
+            // 中文：标准普通话优先于方言/新奇人声，且优先级高于音质
+            let ma = isStandardMandarin(a) ? 1 : 0, mb = isStandardMandarin(b) ? 1 : 0
+            if ma != mb { return ma > mb }
             let ra = rank(a.quality), rb = rank(b.quality)
             if ra != rb { return ra > rb }
             let pa = a.name.lowercased().hasPrefix(preferred) ? 1 : 0
@@ -264,6 +281,7 @@ final class Announcer {
         let prefix = String(language.voiceCode.prefix(2))
         return AVSpeechSynthesisVoice.speechVoices().contains {
             $0.language.hasPrefix(prefix) && ($0.quality == .enhanced || $0.quality == .premium)
+                && isStandardMandarin($0)
         }
     }
 }

@@ -146,6 +146,12 @@ struct SetupView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { voiceRefresh += 1 }
         }
+        .onAppear {
+#if DEBUG
+            // 截图/预览用：启动参数直接打开人声安装教程
+            if ProcessInfo.processInfo.arguments.contains("-uiPreviewVoiceGuide") { showVoiceGuide = true }
+#endif
+        }
     }
 
     // MARK: - 标题

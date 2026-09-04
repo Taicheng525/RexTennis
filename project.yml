@@ -9,7 +9,7 @@ options:
 settings:
   base:
     MARKETING_VERSION: "1.0"
-    CURRENT_PROJECT_VERSION: "1"
+    CURRENT_PROJECT_VERSION: "2"
     SWIFT_VERSION: "5.0"
     DEVELOPMENT_TEAM: "N7W8Q9AW3F"   # 付费个人开发者账号（Taicheng Chen / Individual）——上架用这个
 
@@ -33,7 +33,7 @@ targets:
       properties:
         CFBundleDisplayName: RexTennis
         CFBundleShortVersionString: "1.0"
-        CFBundleVersion: "1"
+        CFBundleVersion: "2"
         UILaunchScreen: {}
         # App 完全离线、不含自定义加密：声明后每次上传 TestFlight/App Store 不再弹「出口合规」问卷
         ITSAppUsesNonExemptEncryption: false
